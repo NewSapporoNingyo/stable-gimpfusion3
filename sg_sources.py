@@ -17,8 +17,6 @@ gi.require_version("Gegl", "0.4")
 gi.require_version("GdkPixbuf", "2.0")
 from gi.repository import GdkPixbuf, Gegl, Gimp, GLib
 
-Gegl.init(None)
-
 
 @dataclass(frozen=True)
 class PixelSnapshot:
@@ -91,6 +89,7 @@ class GenerationSource:
 
     @classmethod
     def capture(cls, image: Gimp.Image, mode: str) -> GenerationSource:
+        Gegl.init(None)
         if not image.is_valid():
             raise ValueError(_("Open the target image"))
         _success, selected, x1, y1, x2, y2 = Gimp.Selection.bounds(image)

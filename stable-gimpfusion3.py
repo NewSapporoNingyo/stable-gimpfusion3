@@ -57,7 +57,6 @@ class GimpfusionPlugin(Gimp.PlugIn):
             logging.exception("ERROR: DynamicDropdownData.fetch")
             settings.save({"is_server_running": False})
 
-        # Set global settings reference for Layer class cache control
         Layer.set_global_settings(settings)
 
     def do_set_i18n(self, name: str) -> str:
