@@ -27,14 +27,16 @@ def integer_seed(value: float | int) -> int:
     return int(value)
 
 
+def validate_dimensions(width: int, height: int) -> None:
+    if width % 8 or height % 8:
+        raise ValueError(_("Width and height must be multiples of 8"))
+
+
 def generation_size(values: dict[str, Any], selection_size: tuple[int, int]) -> tuple[int, int]:
-    if values["generation_mode"] == "img2img" or (
-        values["generation_mode"] == "txt2img" and values["insert_mode"] == "Use selection size"
-    ):
+    if values["generation_mode"] == "txt2img" and values["insert_mode"] == "Use selection size":
         width, height = selection_size
-    else:
-        width, height = values["width"], values["height"]
-    return 8 * round(width / 8), 8 * round(height / 8)
+        return 8 * round(width / 8), 8 * round(height / 8)
+    return values["width"], values["height"]
 
 
 def insertion_size(
@@ -57,6 +59,7 @@ def build_request(
     values: dict[str, Any], prompt_suffix: str, negative_suffix: str, selection_size: tuple[int, int],
 ) -> dict[str, Any]:
     width, height = generation_size(values, selection_size)
+    validate_dimensions(width, height)
     data = {name: values[name] for name in (
         "batch_size", "steps", "cfg_scale", "sampler_index", "restore_faces", "tiling",
     )}

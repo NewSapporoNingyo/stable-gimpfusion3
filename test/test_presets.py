@@ -53,7 +53,7 @@ class PresetTests(unittest.TestCase):
 
     def test_mode_sizes_and_prompts_match_requests(self) -> None:
         values = {
-            "generation_mode": "txt2img", "width": 513, "height": 516, "insert_mode": "Resize to selection",
+            "generation_mode": "txt2img", "width": 512, "height": 512, "insert_mode": "Resize to selection",
             "prompt": "local prompt", "negative_prompt": "local negative", "seed": 0,
             "batch_size": 2, "steps": 5, "cfg_scale": 5.0, "sampler_index": "Euler",
             "restore_faces": False, "tiling": False, "denoising_strength": 0.6,
@@ -66,12 +66,26 @@ class PresetTests(unittest.TestCase):
         assert (text["width"], text["height"]) == (512, 512)
         assert text["seed"] == 0
         assert "denoising_strength" not in text
+        assert insertion_size(values, (384, 256), (640, 512)) == (384, 256)
+        for mode in ("txt2img", "img2img", "inpaint"):
+            values.update(generation_mode=mode, width=1269, height=1660)
+            with self.assertRaisesRegex(ValueError, "multiples of 8"):  # noqa: PT027
+                build_request(values, "", "", (383, 259))
+            values.update(width=1272, height=1664)
+            corrected = build_request(values, "", "", (383, 259))
+            assert (corrected["width"], corrected["height"]) == (1272, 1664)
+        values.update(generation_mode="txt2img", width=513, height=516)
         values["insert_mode"] = "Use selection size"
         assert generation_size(values, (383, 259)) == (384, 256)
+        selection = build_request(values, "", "", (383, 259))
+        assert (selection["width"], selection["height"]) == (384, 256)
+        values.update(width=512, height=384)
         values["generation_mode"] = "img2img"
         image = build_request(values, "", "", (383, 259))
-        assert (image["width"], image["height"]) == (384, 256)
+        assert (image["width"], image["height"]) == (512, 384)
+        assert insertion_size(values, (383, 259), (640, 512)) == (512, 384)
         assert image["denoising_strength"] == 0.6
+        values.update(width=512, height=512)
         values["generation_mode"] = "inpaint"
         inpaint = build_request(values, "", "", (384, 256))
         assert (inpaint["width"], inpaint["height"]) == (512, 512)

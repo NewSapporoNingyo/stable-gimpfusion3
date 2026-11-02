@@ -737,3 +737,6 @@ msgstr "Opzione della preimpostazione non disponibile: {field} = {value}"
 
 msgid "Unsaved parameters"
 msgstr "Parametri da salvare"
+
+msgid "Width and height must be multiples of 8"
+msgstr "Larghezza e altezza devono essere multipli di 8"

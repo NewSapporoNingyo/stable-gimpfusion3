@@ -20,6 +20,7 @@ from sg_generation import (
     generation_size,
     insertion_size,
     integer_seed,
+    validate_dimensions,
 )
 from sg_gtk_utils import add_textarea_to_container
 from sg_i18n import _
@@ -184,17 +185,22 @@ class GenerationDialog:
         self.image = image
         self.active_preset = ""
         self.dialog = GimpUi.ProcedureDialog.new(procedure, config, _("GimpFusion generation"))
+        content = self.dialog.get_content_area()
+        settings_buttons = next(child for child in content.get_children() if isinstance(child, Gtk.ButtonBox))
+        settings_buttons.set_no_show_all(True)
+        settings_buttons.hide()
         root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
-        self.dialog.get_content_area().add(root)
+        content.pack_start(root, True, True, 0)
         row = Gtk.Box(spacing=6)
         root.pack_start(row, False, False, 0)
         self.preset_list = Gtk.ComboBoxText()
         row.pack_start(self.preset_list, True, True, 0)
         self.save_button = Gtk.Button(label=_("Save preset"))
+        self.save_as_button = Gtk.Button(label=_("Save preset as"))
         for button, callback in (
             (Gtk.Button(label=_("Load preset")), self.load_selected),
             (self.save_button, self.save_current),
-            (Gtk.Button(label=_("Save preset as")), self.save_as),
+            (self.save_as_button, self.save_as),
             (Gtk.Button(label=_("Delete preset")), self.delete_selected),
         ):
             row.pack_start(button, False, False, 0)
@@ -203,8 +209,12 @@ class GenerationDialog:
         root.pack_start(self.current_label, False, False, 0)
         self.error_label = Gtk.Label(xalign=0, wrap=True)
         root.pack_start(self.error_label, False, False, 0)
+        self.dimension_label = Gtk.Label(xalign=0, wrap=True)
+        self.dimension_label.set_no_show_all(True)
+        root.pack_start(self.dimension_label, False, False, 0)
         scroll = Gtk.ScrolledWindow()
         scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scroll.set_overlay_scrolling(False)
         scroll.set_min_content_height(450)
         root.pack_start(scroll, True, True, 0)
         body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
@@ -217,9 +227,15 @@ class GenerationDialog:
         seed_widget = self.dialog.get_widget("seed", GimpUi.LabelSpin.__gtype__)
         seed_widget.get_spin_button().set_digits(0)
         seed_widget.get_spin_button().set_increments(1, 100)
-        self.dialog.get_scale_entry("width", 1).set_increments(8, 64)
-        self.dialog.get_scale_entry("height", 1).set_increments(8, 64)
-        self.dialog.get_scale_entry("cfg_scale", 1).set_increments(0.5, 1)
+        self.dimension_spins = []
+        for name in ("width", "height"):
+            entry = self.dialog.get_scale_entry(name, 1)
+            entry.set_increments(8, 64)
+            entry.get_range().connect("change-value", self.change_dimension)
+            self.dimension_spins.append(entry.get_spin_button())
+        cfg_spin = self.dialog.get_widget("cfg_scale", GimpUi.LabelSpin.__gtype__).get_spin_button()
+        cfg_spin.set_digits(2)
+        cfg_spin.set_increments(0.5, 1)
         grid = Gtk.Grid(column_spacing=8, row_spacing=8, column_homogeneous=True)
         body.add(grid)
         self.width_box = self.dialog.fill_box("width_box", ["width"])
@@ -252,29 +268,34 @@ class GenerationDialog:
         root.show_all()
         self.dialog.resize(860, 760)
         config.connect("notify", self.refresh_mode)
+        for spin in self.dimension_spins:
+            spin.connect("changed", self.refresh_mode)
         last = plugin.settings.get("last_preset")
         self.refresh_presets(last)
         if last is not None:
             self.load_selected(same_mode_only=True)
-        self.refresh_mode()
+
+    def change_dimension(self, slider: Gtk.Range, _scroll: Gtk.ScrollType, value: float) -> bool:
+        slider.set_value(8 * round(value / 8))
+        return True
 
     def refresh_presets(self, selected: str | None) -> None:
         self.preset_list.remove_all()
         for name in self.plugin.settings.get("presets"):
             self.preset_list.append(name, name)
         self.preset_list.set_active_id(selected)
-        self.save_button.set_sensitive(bool(self.active_preset))
         self.current_label.set_text(
             _("Current preset: {name}").format(name=self.active_preset)
             if self.active_preset else _("Unsaved parameters"),
         )
+        self.refresh_mode()
 
     def refresh_mode(self, *_args: Any) -> None:
         mode = self.config.get_property("generation_mode")
         self.mode_boxes["txt2img"].set_visible(mode == "txt2img")
         self.mode_boxes["image"].set_visible(mode != "txt2img")
         self.mode_boxes["inpaint"].set_visible(mode == "inpaint")
-        use_dimensions = mode != "img2img" and not (
+        use_dimensions = not (
             mode == "txt2img" and self.config.get_property("insert_mode") == "Use selection size"
         )
         self.width_box.set_sensitive(use_dimensions)
@@ -283,6 +304,21 @@ class GenerationDialog:
         values = {name: self.config.get_property(name) for name in (
             "generation_mode", "insert_mode", "width", "height", "inpaint_full_res",
         )}
+        try:
+            values["width"], values["height"] = (int(spin.get_text()) for spin in self.dimension_spins)
+            validate_dimensions(values["width"], values["height"])
+        except ValueError:
+            valid_dimensions = False
+        else:
+            valid_dimensions = True
+        self.dimension_label.set_text(_("Width and height must be multiples of 8"))
+        self.dimension_label.set_visible(not valid_dimensions)
+        self.save_button.set_sensitive(bool(self.active_preset) and valid_dimensions)
+        self.save_as_button.set_sensitive(valid_dimensions)
+        self.dialog.set_response_sensitive(Gtk.ResponseType.OK, valid_dimensions or not use_dimensions)
+        if use_dimensions and not valid_dimensions:
+            self.size_label.set_text("")
+            return
         width, height = generation_size(values, (x2 - x1, y2 - y1))
         area_width, area_height = insertion_size(
             values, (x2 - x1, y2 - y1), (self.image.get_width(), self.image.get_height()),
@@ -319,7 +355,9 @@ class GenerationDialog:
 
     def save_current(self, *_args: Any) -> None:
         try:
-            self.plugin.settings.save_preset(self.active_preset, self.plugin.collect_values(self.config))
+            values = self.plugin.collect_values(self.config)
+            validate_dimensions(values["width"], values["height"])
+            self.plugin.settings.save_preset(self.active_preset, values)
             self.error_label.set_text("")
             self.refresh_presets(self.active_preset)
         except (ValueError, OSError) as error:
@@ -344,7 +382,9 @@ class GenerationDialog:
                 error_label.set_text(_("Preset name already exists"))
                 continue
             try:
-                self.plugin.settings.save_preset(name, self.plugin.collect_values(self.config))
+                values = self.plugin.collect_values(self.config)
+                validate_dimensions(values["width"], values["height"])
+                self.plugin.settings.save_preset(name, values)
             except (ValueError, OSError) as error:
                 error_label.set_text(str(error))
                 continue

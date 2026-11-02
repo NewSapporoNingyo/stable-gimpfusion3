@@ -531,3 +531,7 @@ msgstr ""
 #: sg_proc_arguments.py:363
 msgid "Threshold B for ControlNet"
 msgstr ""
+
+#: sg_generation.py sg_plugins/generation_base.py
+msgid "Width and height must be multiples of 8"
+msgstr ""

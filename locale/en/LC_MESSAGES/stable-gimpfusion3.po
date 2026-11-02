@@ -699,3 +699,6 @@ msgstr "Unavailable preset option: {field} = {value}"
 
 msgid "Unsaved parameters"
 msgstr "Unsaved parameters"
+
+msgid "Width and height must be multiples of 8"
+msgstr "Width and height must be multiples of 8"
