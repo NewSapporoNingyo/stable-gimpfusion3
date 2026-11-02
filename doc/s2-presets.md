@@ -55,12 +55,32 @@ Forge 返回的 seed 与图层 `gimpfusion` Parasite 一致。
 检查命令：
 
 ```powershell
+$s2Files = @(
+    'stable-gimpfusion3.py', 'sg_generation.py', 'sg_structures.py', 'sg_proc_arguments.py', 'sg_utils.py',
+    'sg_plugins/__init__.py', 'sg_plugins/generation_base.py', 'sg_plugins/config_controlnet.py',
+    'sg_plugins/txt2img.py', 'sg_plugins/img2img.py', 'sg_plugins/inpainting.py', 'test/test_presets.py'
+)
 & 'C:\Program Files\GIMP 3\bin\python.exe' -B -m unittest discover -s test -v
-.\.venv\Scripts\ruff.exe check <本次修改的 Python 文件>
-.\.venv\Scripts\mypy.exe <本次修改的 Python 文件>
+.\.venv\Scripts\ruff.exe check @s2Files
+.\.venv\Scripts\mypy.exe @s2Files
 & 'C:\Program Files\Git\bin\bash.exe' -n update-translations.sh
 git diff --check
 ```
 
 四项 unittest 通过。Ruff、mypy 和翻译脚本语法检查通过。
 en、it、ru 各增加并编译 22 条 S2 翻译，核对新增译文与格式占位符。
+
+## 安装副本验收
+
+开发副本提交并推送后，GIMP 插件副本通过 `pull --ff-only` 更新。入口文件随过程注册代码一同更新，使 GIMP 重新读取共用参数签名。
+
+重启 GIMP 后，通过安装副本注册的 `stable-gimpfusion-txt2img` 和 `stable-gimpfusion-inpainting` 执行两套预设，均返回 `SUCCESS`。
+`S2 文生图` 恢复 seed 0，`S2 重绘` 恢复 seed 4294967295，结果图层均为 384×256。
+三个注册入口的初始模式分别为 txt2img、img2img、inpaint。
+
+通过正常入口 `gimp-3.exe` 打开验收 XCF，确认 GimpFusion 的三个生成菜单均已加载。
+从文生图菜单打开窗口后自动恢复同模式预设；在界面载入 `S2 重绘`，模式切换为 inpaint，提示词与 seed 4294967295 正确恢复。
+使用 computer-use 操作，并按本机设备要求通过全屏截图检查控件和滚动区域。
+
+安装副本配置中保留上述两套验收预设。
+验收结束后已终止本次启动的 Forge 服务。

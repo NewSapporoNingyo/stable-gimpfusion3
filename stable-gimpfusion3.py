@@ -48,15 +48,10 @@ MODULES: dict[str, PluginBase] = {
     "stable-gimpfusion-config": ConfigPlugin(api=api, settings=settings),
     "stable-gimpfusion-config-model": ConfigModelPlugin(api=api, settings=settings),
     "stable-gimpfusion-txt2img": Txt2imagePlugin(api=api, settings=settings),
-    # "stable-gimpfusion-txt2img-context": Txt2imageContextPlugin(api=api, settings=settings),
     "stable-gimpfusion-img2img": Image2imagePlugin(api=api, settings=settings),
-    # "stable-gimpfusion-img2img-context": Image2imageContextPlugin(api=api, settings=settings),
     "stable-gimpfusion-inpainting": InpaintingPlugin(api=api, settings=settings),
-    # "stable-gimpfusion-inpainting-context": InpaintingContextPlugin(api=api, settings=settings),
     "stable-gimpfusion-config-controlnet-layer": ConfigControlnetLayerPlugin(api=api, settings=settings),
-    # "stable-gimpfusion-config-controlnet-layer-context": ConfigControlnetLayerContextPlugin(api=api, settings=settings),
     "stable-gimpfusion-layer-info": LayerInfoPlugin(api=api, settings=settings),
-    # "stable-gimpfusion-layer-info-context": LayerInfoContextPlugin(api=api, settings=settings),
 }
 
 
