@@ -35,15 +35,6 @@ api = ApiClient(settings.get("api_base"))
 logging.basicConfig(level=logging.DEBUG if settings.get("debug_logging") else logging.INFO)
 set_logging_dest(settings.get("file_logging") or False)
 
-# def PLUGIN_FIELDS_TXT2IMG(procedure):
-#     PLUGIN_FIELDS_COMMON(procedure, samplers=SAMPLERS, selected_sampler=settings.get("sampler_name"))
-#     PLUGIN_FIELDS_CONTROLNET_OPTIONS(procedure)
-
-
-# def PLUGIN_FIELDS_IMG2IMG(procedure):
-#     PLUGIN_FIELDS_RESIZE_MODE(procedure, resize_modes=RESIZE_MODES)
-#     PLUGIN_FIELDS_TXT2IMG(procedure)
-
 MODULES: dict[str, PluginBase] = {
     "stable-gimpfusion-config": ConfigPlugin(api=api, settings=settings),
     "stable-gimpfusion-config-model": ConfigModelPlugin(api=api, settings=settings),

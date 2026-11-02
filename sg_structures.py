@@ -2,12 +2,10 @@ from __future__ import annotations
 
 import base64
 import contextlib
-import hashlib
 import json
 import logging
 import os
 import tempfile
-import time
 
 from typing import Any, ClassVar, Literal
 
@@ -15,6 +13,7 @@ import gi
 import requests
 
 from sg_constants import CONTROLNET_DEFAULT_SETTINGS, INSERT_MODES
+from sg_sources import PixelSnapshot
 
 gi.require_version("Gimp", "3.0")
 gi.require_version("Gegl", "0.4")
@@ -25,10 +24,6 @@ from sg_utils import aspect_resize, roundToMultiple
 # Global reference to settings (set during plugin initialization)
 _global_settings = None
 
-# Cache for toBase64 results: key is (layer_id, width, height, hash), value is base64 string
-_toBase64_cache: dict[tuple[int, int, int, str], str] = {}
-_toBase64_cache_max_size = 10  # Limit cache size to prevent memory issues
-_toBase64_cache_pixel_count = 1024
 
 
 class TempFiles:
@@ -188,95 +183,25 @@ class Layer:
     def saveAs(self, filepath):
         logging.debug(f"saveAs {filepath=}")
         new_image = Gimp.Image.new(self.layer.get_width(), self.layer.get_height(), Gimp.ImageBaseType.RGB)
-        layer = Gimp.Layer.new_from_drawable(self.layer, new_image)
-        new_image.insert_layer(layer, None, -1)
-        Gimp.file_save(Gimp.RunMode.NONINTERACTIVE, new_image, Gio.File.new_for_path(filepath), None)
+        try:
+            layer = Gimp.Layer.new_from_drawable(self.layer, new_image)
+            new_image.insert_layer(layer, None, -1)
+            Gimp.file_save(Gimp.RunMode.NONINTERACTIVE, new_image, Gio.File.new_for_path(filepath), None)
+        finally:
+            new_image.delete()
         return self
 
-    def maskToBase64(self):
-        filepath = TempFiles().get(f"mask{self.id}.png")
-        self.saveMaskAs(filepath)
-        with open(filepath, "rb") as file:
-            return base64.b64encode(file.read()).decode()
+    def maskToBase64(self) -> str:
+        return PixelSnapshot.read(self.layer.get_mask(), alpha=False).to_base64(
+            cache_enabled=self._is_cache_enabled(),
+        )
 
-    def toBase64(self):
-        """
-        Convert layer to Base64 encoded PNG string.
-        Uses caching and memory streams for optimization.
-        Caching can be disabled via settings.
-
-        Returns:
-            Base64 encoded PNG string
-        """
-
-        start = time.perf_counter()
-        cache_enabled = self._is_cache_enabled()
-
-        if not cache_enabled:
-            # Caching disabled, use direct conversion
-            try:
-                png_data = self._save_to_memory_stream()
-                result = base64.b64encode(png_data).decode()
-                end_time = time.perf_counter()
-                logging.debug(f"toBase64 (no cache) time for layer {self.id}: {end_time - start:.4f}s")
-                return result
-            except Exception as ex:
-                logging.exception(f"Error in toBase64: {ex}")
-                # Fallback to original method
-                filepath = TempFiles().get(f"layer{self.id}.png")
-                self.saveAs(filepath)
-                with open(filepath, "rb") as file:
-                    return base64.b64encode(file.read()).decode()
-
-        # Caching enabled - generate cache key
-        try:
-            width = self.layer.get_width()
-            height = self.layer.get_height()
-            layer_hash = self._get_layer_hash()
-            cache_key = (id(self.layer), width, height, layer_hash)
-
-            # Check cache
-            if cache_key in _toBase64_cache:
-                end_time = time.perf_counter()
-                logging.debug(f"toBase64 cache hit for layer {self.id}: {end_time - start:.4f}s")
-                return _toBase64_cache[cache_key]
-        except Exception as e:
-            logging.debug(f"Cache key generation failed: {e}")
-            cache_key = None
-
-        # Not in cache, generate Base64
-        try:
-            # Use optimized method for better performance
-            png_data = self._save_to_memory_stream()
-            result = base64.b64encode(png_data).decode()
-
-            # Store in cache (with size limit)
-            if cache_key:
-                if len(_toBase64_cache) < _toBase64_cache_max_size:
-                    _toBase64_cache[cache_key] = result
-                elif _toBase64_cache:
-                    first_key = next(iter(_toBase64_cache))
-                    del _toBase64_cache[first_key]
-                    _toBase64_cache[cache_key] = result
-
-            end_time = time.perf_counter()
-            logging.debug(f"toBase64 time for layer {self.id}: {end_time - start:.4f}s")
-            return result
-        except Exception as ex:
-            logging.exception(f"Error in toBase64: {ex}")
-            # Fallback to original method
-            filepath = TempFiles().get(f"layer{self.id}.png")
-            self.saveAs(filepath)
-            with open(filepath, "rb") as file:
-                return base64.b64encode(file.read()).decode()
+    def toBase64(self) -> str:
+        return PixelSnapshot.read(self.layer).to_base64(cache_enabled=self._is_cache_enabled())
 
     @staticmethod
     def clear_toBase64_cache() -> None:
-        """Clear the toBase64 cache. Useful for memory management."""
-        global _toBase64_cache
-        _toBase64_cache.clear()
-        logging.debug("toBase64 cache cleared")
-
+        PixelSnapshot.cache.clear()
 
     @staticmethod
     def set_global_settings(settings: MyShelf) -> None:
@@ -285,102 +210,11 @@ class Layer:
 
     @staticmethod
     def _is_cache_enabled() -> bool:
-        global _global_settings
-        if _global_settings is None:
-            return True
-        return bool(_global_settings.get("cache_tobase64", True))
+        return _global_settings is None or bool(_global_settings.get("cache_tobase64", True))
 
     def remove(self):
         self.layer.get_image().remove_layer(self.layer)
         return self
-
-    def _get_layer_hash(self) -> str:
-        """
-        Generate a hash for the layer based on its properties.
-        This is used for caching toBase64 results.
-
-        Returns:
-            Hash string representing the layer state
-        """
-        try:
-            # Get basic properties
-            width = self.layer.get_width()
-            height = self.layer.get_height()
-            name = self.layer.get_name()
-
-            hash_obj = hashlib.md5()  # noqa: S324
-            hash_obj.update(f"{width}x{height}x{name}x{id(self.layer)}".encode())
-            return hash_obj.hexdigest()
-        except Exception:
-            # Ultimate fallback: use object ID
-            return str(id(self.layer))
-
-    def _save_to_memory_stream(self) -> bytes:
-        """
-        Save layer to PNG format directly to memory.
-
-        Uses file-based methods with /dev/shm (RAM filesystem) for optimal performance.
-        Direct pixel access via GEGL Buffer or get_pixels() is not available in GIMP 3.0 Python API.
-
-        Note: GIMP 3.0 file_save requires Gio.File, not Gio.OutputStream directly.
-        Using /dev/shm provides near-memory-stream performance while using the file API.
-
-        Returns:
-            PNG image data as bytes
-        """
-        # Create a new image with the layer
-        new_image = Gimp.Image.new(
-            self.layer.get_width(),
-            self.layer.get_height(),
-            Gimp.ImageBaseType.RGB,
-        )
-        layer = Gimp.Layer.new_from_drawable(self.layer, new_image)
-        new_image.insert_layer(layer, None, -1)
-
-
-        # Method: Use /dev/shm (RAM filesystem) - file in RAM, very fast
-        # This is preferred when /dev/shm is available
-        temp_path = None
-        try:
-            if os.path.exists("/dev/shm"):  # noqa: S108
-                temp_path = os.path.join("/dev/shm", f"gimpfusion_layer_{self.id}_{time.time()}.png")  # noqa: S108
-            else:
-                # Fallback to regular temp directory
-                temp_path = os.path.join(tempfile.gettempdir(), f"gimpfusion_layer_{self.id}_{time.time()}.png")
-
-            temp_file = Gio.File.new_for_path(temp_path)
-
-            Gimp.file_save(Gimp.RunMode.NONINTERACTIVE, new_image, temp_file, None)
-
-            with open(temp_path, "rb") as f:
-                data = f.read()
-
-            return data
-        except Exception as e:
-            logging.warning(f"Failed to save to memory filesystem, using fallback: {e}")
-            temp_path = None
-            try:
-                temp_path = os.path.join(tempfile.gettempdir(), f"gimpfusion_layer_{self.id}_{time.time()}.png")
-                temp_file = Gio.File.new_for_path(temp_path)
-                Gimp.file_save(Gimp.RunMode.NONINTERACTIVE, new_image, temp_file, None)
-                with open(temp_path, "rb") as f:
-                    data = f.read()
-                return data
-            finally:
-                # Clean up temp file immediately
-                if temp_path and os.path.exists(temp_path):
-                    try:
-                        os.remove(temp_path)
-                    except Exception as e:
-                        logging.debug(f"Failed to remove temp file {temp_path}: {e}")
-        finally:
-            # Clean up temp file immediately (for /dev/shm case)
-            if temp_path and os.path.exists(temp_path):
-                try:
-                    os.remove(temp_path)
-                except Exception as e:
-                    logging.debug(f"Failed to remove temp file {temp_path}: {e}")
-
 
 
 class ResponseLayers:
@@ -493,14 +327,17 @@ class ResponseLayers:
             Layer(layer).insertTo(image)
         return self
 
-    def addSelectionAsMask(self) -> ResponseLayers:
-        success, non_empty, x1, y1, x2, y2 = Gimp.Selection.bounds(self.image)
-        if not non_empty:
-            return self
-        if (x1 == 0) and (y1 == 0) and (x2 - x1 == self.image.get_width()) and (y2 - y1 == self.image.get_height()):
-            return self
-        for layer in self.layers:
-            Layer(layer).addSelectionAsMask()
+    def addSelectionAsMask(self, selection: PixelSnapshot | None) -> ResponseLayers:
+        if selection is not None:
+            for layer in self.layers:
+                _success, x, y = layer.get_offsets()
+                width, height = layer.get_width(), layer.get_height()
+                pixels = selection.crop(x, y, width, height)
+                mask = layer.create_mask(Gimp.AddMaskType.WHITE)
+                buffer = mask.get_buffer()
+                buffer.set(Gegl.Rectangle.new(0, 0, width, height), "R'G'B' u8", pixels.data)
+                buffer.flush()
+                layer.add_mask(mask)
         return self
 
 
@@ -520,6 +357,9 @@ class MyShelf:
         if os.path.isfile(self.file_path):
             with open(self.file_path, encoding="utf-8") as file:
                 self.data.update(json.load(file))
+        for preset in self.data["presets"].values():
+            if "inpaint_full_res_padding" not in preset:
+                preset["inpaint_full_res_padding"] = 10
 
     def save(self, data: dict[str, Any] | None = None) -> None:
         if data is not None:
@@ -597,63 +437,6 @@ class ApiClient:
         except Exception as ex:
             logging.exception(f"ERROR: ApiClient.get unexpected error to {endpoint}: {ex}")
             raise
-
-
-def getLayerAsBase64(layer: Gimp.Layer) -> str:
-    # store active_layer
-    active_layers = layer.get_image().get_selected_layers()
-    copy = Layer(layer).copy().insert()
-    result = copy.toBase64()
-    copy.remove()
-    # restore active_layer
-    layer.get_image().set_selected_layers(active_layers)
-    return result
-
-
-def getActiveLayerAsBase64(image: Gimp.Image) -> str:
-    return getLayerAsBase64(image.get_selected_layers()[0])
-
-
-def getLayerMaskAsBase64(layer):
-    success, non_empty, x1, y1, x2, y2 = Gimp.Selection.bounds(layer.get_image())
-
-    if non_empty:
-        # selection to base64
-
-        # store active_layer
-        active_layers = layer.get_image().get_selected_layers()
-
-        # selection to file
-        # disable=pdb.gimp_image_undo_disable(layer.image)
-        tmp_layer = Layer.create(
-            layer.get_image(),
-            "mask",
-            layer.get_image().get_width(),
-            layer.get_image().get_height(),
-            Gimp.ImageType.RGBA_IMAGE,
-            100,
-            Gimp.LayerMode.NORMAL,
-        )
-        tmp_layer.addSelectionAsMask().insert()
-
-        result = tmp_layer.maskToBase64()
-        tmp_layer.remove()
-        # enable = pdb.gimp_image_undo_enable(layer.image)
-
-        # restore active_layer
-        layer.get_image().set_selected_layers(active_layers)
-
-        return result
-    elif layer.get_mask():
-        # mask to file
-        tmp_layer = Layer(layer)
-        return tmp_layer.maskToBase64()
-    else:
-        return ""
-
-
-def getActiveMaskAsBase64(image):
-    return getLayerMaskAsBase64(image.get_selected_layers()[0])
 
 
 def getControlNetParams(cn_layer):

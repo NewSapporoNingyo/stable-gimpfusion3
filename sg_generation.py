@@ -15,7 +15,8 @@ CONTROLNET_PARAMETERS = (
 GENERATION_PARAMETERS = (
     "generation_mode", "sd_model_checkpoint", "prompt", "negative_prompt", "seed", "batch_size", "steps",
     "cfg_scale", "width", "height", "sampler_index", "restore_faces", "tiling", "denoising_strength",
-    "resize_mode", "mask_blur", "inpainting_fill", "inpaint_full_res", "invert_mask", "insert_mode",
+    "resize_mode", "mask_blur", "inpainting_fill", "inpaint_full_res", "inpaint_full_res_padding",
+    "invert_mask", "insert_mode",
     "cn1_enabled", "cn2_enabled", "cn_skip_annotator_layers",
     *(f"cn{slot}_{name}" for slot in (1, 2) for name in CONTROLNET_PARAMETERS),
 )
@@ -40,13 +41,13 @@ def generation_size(values: dict[str, Any], selection_size: tuple[int, int]) -> 
 
 
 def insertion_size(
-    values: dict[str, Any], selection_size: tuple[int, int], image_size: tuple[int, int],
+    values: dict[str, Any], selection_size: tuple[int, int], source_size: tuple[int, int],
 ) -> tuple[int, int]:
     mode = values["generation_mode"]
-    if mode == "inpaint":
-        return image_size if values["inpaint_full_res"] else selection_size
+    if mode == "inpaint" and values["inpaint_full_res"]:
+        return source_size
     width, height = generation_size(values, selection_size)
-    if mode == "img2img" or values["insert_mode"] in ("Insert as is", "Use selection size"):
+    if mode in ("img2img", "inpaint") or values["insert_mode"] in ("Insert as is", "Use selection size"):
         return width, height
     if values["insert_mode"] == "Resize to selection":
         return selection_size
@@ -78,7 +79,8 @@ def build_request(
         if values["generation_mode"] == "inpaint":
             data.update({
                 "inpainting_fill": INPAINT_FILL_MODES.index(values["inpainting_fill"]),
-                "inpaint_full_res": values["inpaint_full_res"], "inpaint_full_res_padding": 10,
+                "inpaint_full_res": values["inpaint_full_res"],
+                "inpaint_full_res_padding": values["inpaint_full_res_padding"],
                 "inpainting_mask_invert": int(values["invert_mask"]),
             })
     return data

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: stable-gimpfusion3 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-15 15:38+0100\n"
+"POT-Creation-Date: 2026-11-02 19:31+0900\n"
 "PO-Revision-Date: 2025-12-24 10:51+0100\n"
 "Last-Translator: Maurizio Paglia <maurizio@mauriziopaglia.it>\n"
 "Language-Team: Ansel ITA translation\n"
@@ -15,20 +15,34 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<="
-"4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Generator: Lokalize 25.12.0\n"
 
-#: sg_plugins/config_controlnet.py:20
-msgid "Active layer as ControlNet"
-msgstr "Livello attivo come ControlNet"
+#: sg_generation.py:27
+msgid "Seed must be an integer from -1 to 4294967295"
+msgstr "Il seed deve essere un numero intero da -1 a 4294967295"
 
-#: sg_plugins/config_controlnet.py:21
-msgid ""
-"Convert current layer to ControlNet layer or edit ControlNet Layer's options"
+#: sg_generation.py:33 sg_plugins/generation_base.py:353
+msgid "Width and height must be multiples of 8"
+msgstr "Larghezza e altezza devono essere multipli di 8"
+
+#: sg_sources.py:82
+msgid "Open the target image"
+msgstr "Apri l?immagine di destinazione"
+
+#: sg_sources.py:112
+msgid "Select a source layer"
+msgstr "Seleziona un livello sorgente"
+
+#: sg_sources.py:115
+msgid "Create a selection or add a source layer mask"
+msgstr "Crea una selezione o aggiungi una maschera al livello sorgente"
+
+#: sg_sources.py:118
+msgid "Provide a mask with an area to inpaint within the source layer"
 msgstr ""
-"Converti il livello corrente in un livello ControlNet o modifica le opzioni de"
-"l livello ControlNet"
+"Definisci nella maschera un?area da ridisegnare entro il livello sorgente"
 
 #: sg_plugins/config.py:24
 msgid "Global"
@@ -86,8 +100,8 @@ msgstr "Memorizza i risultati di toBase64"
 #: sg_plugins/config.py:67
 msgid "Enable caching of toBase64 conversions for better performance"
 msgstr ""
-"Abilita la memorizzazione delle conversioni di toBase64 per prestazioni miglio"
-"ri"
+"Abilita la memorizzazione delle conversioni di toBase64 per prestazioni "
+"migliori"
 
 #: sg_plugins/config.py:85
 msgid "Global gimpfusion settings"
@@ -105,44 +119,187 @@ msgstr "Cambia il modello di controllo"
 msgid "Changing model..."
 msgstr "Sto cambiando il modello..."
 
-#: sg_plugins/img2img.py:23
-msgid "Image to image"
-msgstr "Immagine da immagine"
+#: sg_plugins/config_controlnet.py:20
+msgid "Active layer as ControlNet"
+msgstr "Livello attivo come ControlNet"
 
-#: sg_plugins/img2img.py:24
-msgid "Generate image based on other image"
-msgstr "Genera un'immagine partendo da un'altra immagine"
+#: sg_plugins/config_controlnet.py:21
+msgid ""
+"Convert current layer to ControlNet layer or edit ControlNet Layer's options"
+msgstr ""
+"Converti il livello corrente in un livello ControlNet o modifica le opzioni "
+"del livello ControlNet"
 
-#: sg_plugins/img2img.py:118
-msgid "Saving active layer as base64"
-msgstr "Salva il livello attivo come base64"
+#: sg_plugins/generation_base.py:55
+msgid "Generation mode"
+msgstr "Modalit? di generazione"
 
-#: sg_plugins/img2img.py:164
-msgid "Calling Stable Diffusion /sdapi/v1/img2img"
-msgstr "Chiamata Stable Diffusion /sdapi/v1/img2img"
+#: sg_plugins/generation_base.py:60 sg_proc_arguments.py:15
+#: sg_proc_arguments.py:314
+msgid "Model"
+msgstr "Modello"
 
-#: sg_plugins/img2img.py:167 sg_plugins/txt2img.py:143
+#: sg_plugins/generation_base.py:60 sg_proc_arguments.py:16
+msgid "Model to use for inference"
+msgstr "Modello da utilizzare per l'inferenza"
+
+#: sg_plugins/generation_base.py:88 sg_plugins/generation_base.py:92
+#: sg_plugins/generation_base.py:100 sg_plugins/generation_base.py:107
+#, python-brace-format
+msgid "Invalid preset field: {field}"
+msgstr "Campo della preimpostazione non valido: {field}"
+
+#: sg_plugins/generation_base.py:97
+#, python-brace-format
+msgid "Unavailable preset option: {field} = {value}"
+msgstr "Opzione della preimpostazione non disponibile: {field} = {value}"
+
+#: sg_plugins/generation_base.py:160 sg_plugins/generation_base.py:489
+msgid "Select a ControlNet input layer from the current image"
+msgstr "Seleziona un livello di input ControlNet nell?immagine attuale"
+
+#: sg_plugins/generation_base.py:171
+msgid "Generating image"
+msgstr "Generazione immagine"
+
+#: sg_plugins/generation_base.py:179
 msgid "Inserting layers from response"
 msgstr "Inserisco i livelli dalle risposte"
 
-#: sg_plugins/img2img.py:183 sg_plugins/inpainting.py:157
-#: sg_plugins/txt2img.py:160
-#, python-brace-format
-msgid "Error occurred: {error}"
-msgstr "Errore: {error}"
+#: sg_plugins/generation_base.py:201
+msgid "GimpFusion generation"
+msgstr "Generazione GimpFusion"
 
-#: sg_plugins/inpainting.py:28
+#: sg_plugins/generation_base.py:202
+msgid "Generate"
+msgstr "Genera"
+
+#: sg_plugins/generation_base.py:213 sg_plugins/generation_base.py:444
+msgid "Save preset"
+msgstr "Salva preimpostazione"
+
+#: sg_plugins/generation_base.py:214 sg_plugins/generation_base.py:443
+msgid "Save preset as"
+msgstr "Salva preimpostazione come"
+
+#: sg_plugins/generation_base.py:216
+msgid "Load preset"
+msgstr "Carica preimpostazione"
+
+#: sg_plugins/generation_base.py:219
+msgid "Delete preset"
+msgstr "Elimina preimpostazione"
+
+#: sg_plugins/generation_base.py:242
+msgid "Input source"
+msgstr "Sorgente di ingresso"
+
+#: sg_plugins/generation_base.py:283 sg_proc_arguments.py:274
+msgid "Inpaint area"
+msgstr "Area da ridisegnare"
+
+#: sg_plugins/generation_base.py:283
+msgid "Only masked"
+msgstr "Solo area mascherata"
+
+#: sg_plugins/generation_base.py:283
+msgid "Whole picture"
+msgstr "Immagine intera"
+
+#: sg_plugins/generation_base.py:293
+#, python-brace-format
+msgid "ControlNet {slot} parameters"
+msgstr "Parametri ControlNet {slot}"
+
+#: sg_plugins/generation_base.py:297
+msgid "Read layer settings"
+msgstr "Leggi impostazioni del livello"
+
+#: sg_plugins/generation_base.py:323
+#, python-brace-format
+msgid "Current preset: {name}"
+msgstr "Preimpostazione attuale: {name}"
+
+#: sg_plugins/generation_base.py:324
+msgid "Unsaved parameters"
+msgstr "Parametri da salvare"
+
+#: sg_plugins/generation_base.py:372
+#, python-brace-format
+msgid ""
+"Request: {width} x {height}; insertion area: {area_width} x {area_height}"
+msgstr ""
+"Richiesta: {width} x {height}; area di inserimento: {area_width} x "
+"{area_height}"
+
+#: sg_plugins/generation_base.py:388
+#, python-brace-format
+msgid "Target image: {name}"
+msgstr "Immagine di destinazione: {name}"
+
+#: sg_plugins/generation_base.py:390
+#, python-brace-format
+msgid "Selection: ({x}, {y}), {width} x {height}"
+msgstr "Selezione: ({x}, {y}), {width} x {height}"
+
+#: sg_plugins/generation_base.py:392
+msgid "Selection: whole image"
+msgstr "Selezione: immagine intera"
+
+#: sg_plugins/generation_base.py:396
+#, python-brace-format
+msgid "Source layer: {name}"
+msgstr "Livello sorgente: {name}"
+
+#: sg_plugins/generation_base.py:397
+#, python-brace-format
+msgid "Source: {width} x {height}; offset: ({x}, {y})"
+msgstr "Sorgente: {width} x {height}; posizione: ({x}, {y})"
+
+#: sg_plugins/generation_base.py:405
+msgid "Current selection"
+msgstr "Selezione corrente"
+
+#: sg_plugins/generation_base.py:405
+msgid "Source layer mask"
+msgstr "Maschera del livello sorgente"
+
+#: sg_plugins/generation_base.py:405
+msgid "Create a mask"
+msgstr "Crea una maschera"
+
+#: sg_plugins/generation_base.py:406
+#, python-brace-format
+msgid "Mask source: {name}"
+msgstr "Sorgente della maschera: {name}"
+
+#: sg_plugins/generation_base.py:444
+msgid "Cancel"
+msgstr "Annulla"
+
+#: sg_plugins/generation_base.py:455
+msgid "Enter a preset name"
+msgstr "Inserisci un nome per la preimpostazione"
+
+#: sg_plugins/generation_base.py:458
+msgid "Preset name already exists"
+msgstr "Il nome della preimpostazione esiste gi?"
+
+#: sg_plugins/img2img.py:7
+msgid "Image to image"
+msgstr "Immagine da immagine"
+
+#: sg_plugins/img2img.py:8
+msgid "Generate image based on other image"
+msgstr "Genera un'immagine partendo da un'altra immagine"
+
+#: sg_plugins/inpainting.py:7
 msgid "Inpainting"
 msgstr "Ricostruzione"
 
-#: sg_plugins/inpainting.py:29
+#: sg_plugins/inpainting.py:8
 msgid "Inpainting in existing image"
 msgstr "Ricostruisci immagine esistente"
-
-#: sg_plugins/inpainting.py:99
-msgid "Inpainting must use either a selection or layer mask"
-msgstr ""
-"La ricostruzione deve utilizzare una selezione o una maschera di livello"
 
 #: sg_plugins/layerinfo.py:21
 msgid "Layer Info"
@@ -156,25 +313,13 @@ msgstr "Mostra le informazioni di stable-gimpfusion associate a questo livello"
 msgid "Selected layers have the following data associated with them:"
 msgstr "I livelli selezionati sono associati ai seguenti dati:"
 
-#: sg_plugins/txt2img.py:22
+#: sg_plugins/txt2img.py:7
 msgid "Text to image"
 msgstr "Immagine da testo"
 
-#: sg_plugins/txt2img.py:23
+#: sg_plugins/txt2img.py:8
 msgid "Generate image from text"
 msgstr "Genera un'immagine da un testo"
-
-#: sg_plugins/txt2img.py:140
-msgid "Calling Stable Diffusion /sdapi/v1/txt2img"
-msgstr "Chiamata Stable Diffusion /sdapi/v1/txt2img"
-
-#: sg_proc_arguments.py:15 sg_proc_arguments.py:315
-msgid "Model"
-msgstr "Modello"
-
-#: sg_proc_arguments.py:16
-msgid "Model to use for inference"
-msgstr "Modello da utilizzare per l'inferenza"
 
 #: sg_proc_arguments.py:25
 msgid "Add VAE and text encoders for Flux"
@@ -191,13 +336,12 @@ msgid ""
 msgstr ""
 "Aggiungi VAE e codificatori di testo per i modelli basati su Flux:\n"
 "\n"
-"          Autoguess: VAEs e codificatori di testo per Flux sono aggiunti autom"
-"aticamente "
-"in base al nome del modello.\n"
-"          Never add: VAEs e codificatori di testo per Flux non vengono mai agg"
-"iunti.\n"
-"          Always add: VAEs e codificatori di testo per Flux sono sempre aggiun"
-"ti."
+"          Autoguess: VAEs e codificatori di testo per Flux sono aggiunti "
+"automaticamente in base al nome del modello.\n"
+"          Never add: VAEs e codificatori di testo per Flux non vengono mai "
+"aggiunti.\n"
+"          Always add: VAEs e codificatori di testo per Flux sono sempre "
+"aggiunti."
 
 #: sg_proc_arguments.py:53
 msgid "Flux VAEs and text encoders"
@@ -228,12 +372,10 @@ msgid "Seed"
 msgstr "Seed"
 
 #: sg_proc_arguments.py:78
-msgid ""
-"Value that determines the output of a random number generator (0 or -1 for "
-"random)"
+msgid "Seed: -1 for random, 0 or a positive integer for a fixed result"
 msgstr ""
-"Valore che determina il risultato di un generatore casuale di numeri "
-"(0 o -1 per la casualità)"
+"Seed: -1 per un risultato casuale, 0 o un intero positivo per un risultato "
+"fisso"
 
 #: sg_proc_arguments.py:86
 msgid "Batch count"
@@ -256,9 +398,8 @@ msgid ""
 msgstr ""
 "La quantità di passi utilizzati dal modello AI quando viene generata "
 "un'immagine dalla descrizione testuale.\n"
-"        Più il numero è grande e maggiore sarà il tempo di generazione. Questo"
-" non "
-"garantisce una maggiore qualità dell'immagine finale."
+"        Più il numero è grande e maggiore sarà il tempo di generazione. "
+"Questo non garantisce una maggiore qualità dell'immagine finale."
 
 #: sg_proc_arguments.py:105
 msgid "Mask Blur"
@@ -306,13 +447,12 @@ msgstr ""
 "7 o 7.5 sono i valori consigliati. Questi valori possono essere aumentati se "
 "l'immagine generata non riflette la descrizione.\n"
 "\n"
-"Numeri bassi (intervallo 0-6): stai dicendo all'AI di ignorare la tua descrizi"
-"one.\n"
-"Gamma media (intervallo 6-10): stai dicendo all'AI che vuoi un risultato preci"
-"so ma che "
-"puoi accettare qualche variazione.\n"
-"Numeri alti: (10 in su): da non utilizzare poiché spesso di ottengono pessime "
-"immagini."
+"Numeri bassi (intervallo 0-6): stai dicendo all'AI di ignorare la tua "
+"descrizione.\n"
+"Gamma media (intervallo 6-10): stai dicendo all'AI che vuoi un risultato "
+"preciso ma che puoi accettare qualche variazione.\n"
+"Numeri alti: (10 in su): da non utilizzare poiché spesso di ottengono "
+"pessime immagini."
 
 #: sg_proc_arguments.py:146
 msgid "Denoising Strength"
@@ -335,12 +475,13 @@ msgid ""
 "0.75: Quite a change\n"
 "1.0: Most changes\n"
 msgstr ""
-"L'intensità della trasformazione dell'immagine durante il processo di ricostru"
-"zione.\n"
+"L'intensità della trasformazione dell'immagine durante il processo di "
+"ricostruzione.\n"
 "\n"
-"Determina la considerazione che l'algoritmo deve avere rispetto al "
-"contenuto dell'immagine.\n"
-"A 0 non verrà cambiato nulla mentra ad 1 verrà prodotta un'immagine casuale.\n"
+"Determina la considerazione che l'algoritmo deve avere rispetto al contenuto "
+"dell'immagine.\n"
+"A 0 non verrà cambiato nulla mentra ad 1 verrà prodotta un'immagine "
+"casuale.\n"
 "\n"
 "Più il numero è alto e più la trasformazione verrà influenzata.\n"
 "Un valore tra 0.5 e 1 è perfetto per mantenere consistenza nell'immagine.\n"
@@ -374,9 +515,8 @@ msgstr "Piastrellatura"
 #: sg_proc_arguments.py:184
 msgid "Tiling will improve image quality and speed, but may cause artifacts"
 msgstr ""
-"La piastrellatura aumenta la velocità di generazione e la qualità dell'immagin"
-"e "
-"ma può creare artefatti."
+"La piastrellatura aumenta la velocità di generazione e la qualità "
+"dell'immagine ma può creare artefatti."
 
 #: sg_proc_arguments.py:191
 msgid "Insert mode"
@@ -400,20 +540,16 @@ msgid ""
 msgstr ""
 "Come inserire l'immagine generata:\n"
 "\n"
-"Scale to fill — altezza e larghezza dell'immagine generata verranno stirate pe"
-"r "
-"corrispondere a quelle della selezione (default)\n"
-"Insert as is — inserisce l'immagine generata con le dimensioni importate "
-"dal punto in alto a sinistra\n"
-"Aspect fill — il lato più lungo dell'immagine generata viene stirato per adatt"
-"arlo "
-"alla selezione\n"
-"Aspect fit — il lato più corto dell'immagine generata viene stirato per adatta"
-"rlo "
-"alla selezione\n"
-"Use selection size — tenta di creare un'immagine che corrisponde alla selezion"
-"e anziché "
-"una con le dimensioni impostate\n"
+"Scale to fill — altezza e larghezza dell'immagine generata verranno stirate "
+"per corrispondere a quelle della selezione (default)\n"
+"Insert as is — inserisce l'immagine generata con le dimensioni importate dal "
+"punto in alto a sinistra\n"
+"Aspect fill — il lato più lungo dell'immagine generata viene stirato per "
+"adattarlo alla selezione\n"
+"Aspect fit — il lato più corto dell'immagine generata viene stirato per "
+"adattarlo alla selezione\n"
+"Use selection size — tenta di creare un'immagine che corrisponde alla "
+"selezione anziché una con le dimensioni impostate\n"
 "        "
 
 #: sg_proc_arguments.py:209
@@ -456,7 +592,7 @@ msgstr "Ignora i livelli dell'annotatore"
 msgid "Skip annotator layers (something that I don't know what it does)"
 msgstr "Opzione per cui ignoro lo scopo..."
 
-#: sg_proc_arguments.py:247 sg_proc_arguments.py:333
+#: sg_proc_arguments.py:247 sg_proc_arguments.py:315
 msgid "Resize Mode"
 msgstr "Modalità ritaglio"
 
@@ -482,25 +618,20 @@ msgid ""
 msgstr ""
 "Modalità ritaglio\n"
 "\n"
-"Just resize: Ritaglia l'immagine per inserirla nella selezione. Le proporzioni"
-" non "
-"vengono mantenute quindi l'immagine verrà stirata o compressa nel caso in cui "
-"le dimensioni della selezione siano differenti.\n"
+"Just resize: Ritaglia l'immagine per inserirla nella selezione. Le "
+"proporzioni non vengono mantenute quindi l'immagine verrà stirata o "
+"compressa nel caso in cui le dimensioni della selezione siano differenti.\n"
 "\n"
-"Crop and resize: Ritaglia l'immagine per mantenerne le proporzioni, quindi la "
-"ridimensiona. "
-"Le proporzioni vengono mantenute e l'eccedenza rimossa.\n"
+"Crop and resize: Ritaglia l'immagine per mantenerne le proporzioni, quindi "
+"la ridimensiona. Le proporzioni vengono mantenute e l'eccedenza rimossa.\n"
 "\n"
-"Resize and fill: Ridimensiona e riempie le aree vuote con il contenuto. L'imma"
-"gine viene ridimensionata "
-"per adattarla alle dimensioni della selezione di destinazione mantenendo anche"
-" le proporzioni. "
-"L'area eccedente verrà riempita con il colore del bordo dell'immagine di input"
-".\n"
+"Resize and fill: Ridimensiona e riempie le aree vuote con il contenuto. "
+"L'immagine viene ridimensionata per adattarla alle dimensioni della "
+"selezione di destinazione mantenendo anche le proporzioni. L'area eccedente "
+"verrà riempita con il colore del bordo dell'immagine di input.\n"
 "\n"
-"Just resize (latent upscale): Ridimensiona lo spazio latente. Si comporta come"
-" Just "
-"Resize, ma utilizza Latent Upscale per il ridimensionamento.\n"
+"Just resize (latent upscale): Ridimensiona lo spazio latente. Si comporta "
+"come Just Resize, ma utilizza Latent Upscale per il ridimensionamento.\n"
 "        "
 
 #: sg_proc_arguments.py:267
@@ -512,34 +643,32 @@ msgid ""
 "Determines whether you want to inpaint the masked object or outside of the "
 "masked object"
 msgstr ""
-"Determina se ricostruire l'oggetto mascherato o ciò che è "
-"esterno alla maschera"
-
-#: sg_proc_arguments.py:274
-msgid "Inpaint Whole Picture"
-msgstr "Ricostruisci l'intera immagine"
+"Determina se ricostruire l'oggetto mascherato o ciò che è esterno alla "
+"maschera"
 
 #: sg_proc_arguments.py:275
 msgid ""
-"Refers to the inpaint area. It can be either true or false.\n"
-"\n"
-"        If set to true, inpaint area will be the same resolution as the "
-"starting image.\n"
-"        If set to false, inpaint area will stretch to fit the starting image."
+"Whole picture samples the entire source; Only masked samples the mask area "
+"and composites it into the source"
 msgstr ""
-"Riferito all'area da ricostruire. Può essere vero o falso.\n"
-"\n"
-"        Se impostato a vero, l'area da ricostruire avrà la stessa risoluzione "
-"dell'immagine di partenza.\n"
-"        Se impostato a falso, l'area da ricostruire verrà stirata per essere a"
-"dattata "
-"all'immagine di partenza."
+"Immagine intera elabora tutta la sorgente; Solo area mascherata elabora l?"
+"area della maschera e la ricompone nella sorgente"
 
-#: sg_proc_arguments.py:284
+#: sg_proc_arguments.py:282
+msgid "Only masked padding, pixels"
+msgstr "Margine dell?area mascherata, pixel"
+
+#: sg_proc_arguments.py:283
+msgid "Context added around the mask before sampling in Only masked mode"
+msgstr ""
+"Contesto aggiunto attorno alla maschera prima del campionamento in modalit? "
+"Solo area mascherata"
+
+#: sg_proc_arguments.py:291
 msgid "Mask fill mode"
 msgstr "Modalità di riempimento della maschera"
 
-#: sg_proc_arguments.py:285
+#: sg_proc_arguments.py:292
 msgid ""
 "Choose the fill content in mask\n"
 "\n"
@@ -558,185 +687,143 @@ msgstr ""
 "fill: Riempie l'immagine di input con il colore medio dell'area mascherata. "
 "Ideale per rimuovere gli oggetti.\n"
 "original: L'immagine di input viene utilizzata così com'è.\n"
-"latent noise: Riempie l'area mascherata con rumore basato sul Seed. Può essere"
-" utilizzato "
-"per mascherare un oggetto e ridisegnare lo sfondo. 1 è il valore raccomandato "
-"per CGF.\n"
-"latent nothing: Riempie l'area mascherata con il colore medio dell'area masche"
-"rata. "
-"Può essere utilizzato per mascherare un oggetto e ridisegnare lo sfondo. 0.8 o"
-" "
-"più è il valore raccomandato per CGF.\n"
+"latent noise: Riempie l'area mascherata con rumore basato sul Seed. Può "
+"essere utilizzato per mascherare un oggetto e ridisegnare lo sfondo. 1 è il "
+"valore raccomandato per CGF.\n"
+"latent nothing: Riempie l'area mascherata con il colore medio dell'area "
+"mascherata. Può essere utilizzato per mascherare un oggetto e ridisegnare lo "
+"sfondo. 0.8 o più è il valore raccomandato per CGF.\n"
 "        "
 
-#: sg_proc_arguments.py:307
+#: sg_proc_arguments.py:314
 msgid "Module"
 msgstr "Modulo"
 
-#: sg_proc_arguments.py:308
-msgid "Module to use for controlnet"
-msgstr "Modulo da usare per ControlNet"
-
-#: sg_proc_arguments.py:316
-msgid "Model to use for controlnet"
-msgstr "Modello da usare per ControlNet"
-
-#: sg_proc_arguments.py:323
-msgid "Weight"
-msgstr "Peso"
-
-#: sg_proc_arguments.py:324
-msgid ""
-"Determines how closely the control map should follow the prompt.\n"
-"By default it is 1 and it will deviate from the control map as it gets "
-"closer to 0"
-msgstr ""
-"Determina l'aderenza della mappa di controllo con la descrizione.\n"
-"Il valore predefinito è 1 e la deviazione dalla mappa di controllo è "
-"maggiore avvicinandosi allo 0"
-
-#: sg_proc_arguments.py:334
-msgid "Resize Mode for ControlNet"
-msgstr "Modalità ritaglio per ControlNet"
-
-#: sg_proc_arguments.py:341
-msgid "Low VRAM"
-msgstr "VRAM bassa"
-
-#: sg_proc_arguments.py:342
-msgid "Only recommended if you have less than 8gb VRAM"
-msgstr "Raccomandato solamente con VRAM < 8GB"
-
-#: sg_proc_arguments.py:348
+#: sg_proc_arguments.py:315
 msgid "Control Mode"
 msgstr "Modalità controllo"
 
-#: sg_proc_arguments.py:349
-msgid "Control Mode for ControlNet"
-msgstr "Modalità controllo per ControlNet"
+#: sg_proc_arguments.py:321
+msgid "Weight"
+msgstr "Peso"
 
-#: sg_proc_arguments.py:356
+#: sg_proc_arguments.py:322
 msgid "Guidance Start (T)"
 msgstr "Inizio guida (T)"
 
-#: sg_proc_arguments.py:357
-msgid "Guidance Start (T) for ControlNet"
-msgstr "Inizio guida (T) per ControlNet"
-
-#: sg_proc_arguments.py:365
+#: sg_proc_arguments.py:323
 msgid "Guidance End (T)"
 msgstr "Fine guida (T)"
 
-#: sg_proc_arguments.py:366
-msgid "Guidance End (T) for ControlNet"
-msgstr "Fine guida (T) per ControlNet"
-
-#: sg_proc_arguments.py:373
-msgid "Guidance"
-msgstr "Guida"
-
-#: sg_proc_arguments.py:373
-msgid "Guidance for ControlNet"
-msgstr "Guida per ControlNet"
-
-#: sg_proc_arguments.py:377
-msgid "Processor Resolution"
-msgstr "Risoluzione processore"
-
-#: sg_proc_arguments.py:378
-msgid ""
-"set this to 512. There’s an ongoing bug that results in the cv2 error if "
-"it’s not set"
-msgstr ""
-"Impostare a 512. Esiste un bug che genera un errore cv2 "
-"se questo parametro non è impostato."
-
-#: sg_proc_arguments.py:385
+#: sg_proc_arguments.py:324
 msgid "Threshold A"
 msgstr "Soglia A"
 
-#: sg_proc_arguments.py:385
-msgid "Threshold A for ControlNet"
-msgstr "Soglia A per ControlNet"
-
-#: sg_proc_arguments.py:388
+#: sg_proc_arguments.py:325
 msgid "Threshold B"
 msgstr "Soglia B"
 
-#: sg_proc_arguments.py:388
-msgid "Threshold B for ControlNet"
-msgstr "Soglia B per ControlNet"
+#: sg_proc_arguments.py:331
+msgid "Processor Resolution"
+msgstr "Risoluzione processore"
 
-msgid "Cancel"
-msgstr "Annulla"
-
+#: sg_proc_arguments.py:331
 msgid "ControlNet preprocessing resolution"
 msgstr "Risoluzione di pre-elaborazione ControlNet"
 
-msgid "ControlNet {slot} parameters"
-msgstr "Parametri ControlNet {slot}"
+#~ msgid "Saving active layer as base64"
+#~ msgstr "Salva il livello attivo come base64"
 
-msgid "Current preset: {name}"
-msgstr "Preimpostazione attuale: {name}"
+#~ msgid "Calling Stable Diffusion /sdapi/v1/img2img"
+#~ msgstr "Chiamata Stable Diffusion /sdapi/v1/img2img"
 
-msgid "Delete preset"
-msgstr "Elimina preimpostazione"
+#, python-brace-format
+#~ msgid "Error occurred: {error}"
+#~ msgstr "Errore: {error}"
 
-msgid "Enter a preset name"
-msgstr "Inserisci un nome per la preimpostazione"
+#~ msgid "Inpainting must use either a selection or layer mask"
+#~ msgstr ""
+#~ "La ricostruzione deve utilizzare una selezione o una maschera di livello"
 
-msgid "Generating image"
-msgstr "Generazione immagine"
+#~ msgid "Calling Stable Diffusion /sdapi/v1/txt2img"
+#~ msgstr "Chiamata Stable Diffusion /sdapi/v1/txt2img"
 
-msgid "Generation mode"
-msgstr "Modalit? di generazione"
+#~ msgid ""
+#~ "Value that determines the output of a random number generator (0 or -1 "
+#~ "for random)"
+#~ msgstr ""
+#~ "Valore che determina il risultato di un generatore casuale di numeri (0 o "
+#~ "-1 per la casualità)"
 
-msgid "GimpFusion generation"
-msgstr "Generazione GimpFusion"
+#~ msgid "Inpaint Whole Picture"
+#~ msgstr "Ricostruisci l'intera immagine"
 
-msgid "Invalid preset field: {field}"
-msgstr "Campo della preimpostazione non valido: {field}"
+#~ msgid ""
+#~ "Refers to the inpaint area. It can be either true or false.\n"
+#~ "\n"
+#~ "        If set to true, inpaint area will be the same resolution as the "
+#~ "starting image.\n"
+#~ "        If set to false, inpaint area will stretch to fit the starting "
+#~ "image."
+#~ msgstr ""
+#~ "Riferito all'area da ricostruire. Può essere vero o falso.\n"
+#~ "\n"
+#~ "        Se impostato a vero, l'area da ricostruire avrà la stessa "
+#~ "risoluzione dell'immagine di partenza.\n"
+#~ "        Se impostato a falso, l'area da ricostruire verrà stirata per "
+#~ "essere adattata all'immagine di partenza."
 
-msgid "Load preset"
-msgstr "Carica preimpostazione"
+#~ msgid "Module to use for controlnet"
+#~ msgstr "Modulo da usare per ControlNet"
 
-msgid "Preset name already exists"
-msgstr "Il nome della preimpostazione esiste gi?"
+#~ msgid "Model to use for controlnet"
+#~ msgstr "Modello da usare per ControlNet"
 
-msgid "Read layer settings"
-msgstr "Leggi impostazioni del livello"
+#~ msgid ""
+#~ "Determines how closely the control map should follow the prompt.\n"
+#~ "By default it is 1 and it will deviate from the control map as it gets "
+#~ "closer to 0"
+#~ msgstr ""
+#~ "Determina l'aderenza della mappa di controllo con la descrizione.\n"
+#~ "Il valore predefinito è 1 e la deviazione dalla mappa di controllo è "
+#~ "maggiore avvicinandosi allo 0"
 
-msgid ""
-"Request: {width} x {height}; insertion area: {area_width} x {area_height}"
-msgstr ""
-"Richiesta: {width} x {height}; area di inserimento: {area_width} x "
-"{area_height}"
+#~ msgid "Resize Mode for ControlNet"
+#~ msgstr "Modalità ritaglio per ControlNet"
 
-msgid "Save preset"
-msgstr "Salva preimpostazione"
+#~ msgid "Low VRAM"
+#~ msgstr "VRAM bassa"
 
-msgid "Save preset as"
-msgstr "Salva preimpostazione come"
+#~ msgid "Only recommended if you have less than 8gb VRAM"
+#~ msgstr "Raccomandato solamente con VRAM < 8GB"
 
-msgid "Seed must be an integer from -1 to 4294967295"
-msgstr "Il seed deve essere un numero intero da -1 a 4294967295"
+#~ msgid "Control Mode for ControlNet"
+#~ msgstr "Modalità controllo per ControlNet"
 
-msgid "Seed: -1 for random, 0 or a positive integer for a fixed result"
-msgstr ""
-"Seed: -1 per un risultato casuale, 0 o un intero positivo per un risultato "
-"fisso"
+#~ msgid "Guidance Start (T) for ControlNet"
+#~ msgstr "Inizio guida (T) per ControlNet"
 
-msgid "Select a ControlNet input layer from the current image"
-msgstr "Seleziona un livello di input ControlNet nell?immagine attuale"
+#~ msgid "Guidance End (T) for ControlNet"
+#~ msgstr "Fine guida (T) per ControlNet"
 
-msgid "Source: {width} x {height}"
-msgstr "Sorgente: {width} x {height}"
+#~ msgid "Guidance"
+#~ msgstr "Guida"
 
-msgid "Unavailable preset option: {field} = {value}"
-msgstr "Opzione della preimpostazione non disponibile: {field} = {value}"
+#~ msgid "Guidance for ControlNet"
+#~ msgstr "Guida per ControlNet"
 
-msgid "Unsaved parameters"
-msgstr "Parametri da salvare"
+#~ msgid ""
+#~ "set this to 512. There’s an ongoing bug that results in the cv2 error if "
+#~ "it’s not set"
+#~ msgstr ""
+#~ "Impostare a 512. Esiste un bug che genera un errore cv2 se questo "
+#~ "parametro non è impostato."
 
-msgid "Width and height must be multiples of 8"
-msgstr "Larghezza e altezza devono essere multipli di 8"
+#~ msgid "Threshold A for ControlNet"
+#~ msgstr "Soglia A per ControlNet"
+
+#~ msgid "Threshold B for ControlNet"
+#~ msgstr "Soglia B per ControlNet"
+
+#~ msgid "Source: {width} x {height}"
+#~ msgstr "Sorgente: {width} x {height}"

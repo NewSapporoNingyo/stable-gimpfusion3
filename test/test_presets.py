@@ -17,7 +17,7 @@ class PresetTests(unittest.TestCase):
             path.write_text('{"api_base": "http://example.test", "prompt": "suffix"}', encoding="utf-8")
             shelf = MyShelf({"steps": 20}, file_path=str(path))
             assert shelf.get("presets") == {}
-            preset = {"generation_mode": "txt2img", "seed": 0, "loras": [
+            preset = {"generation_mode": "txt2img", "seed": 0, "inpaint_full_res_padding": 32, "loras": [
                 {"name": "model", "alias": "tag", "weight": 0.75, "enabled": True},
             ]}
             shelf.save_preset("预设一", preset)
@@ -33,6 +33,19 @@ class PresetTests(unittest.TestCase):
             assert reloaded.get("last_preset") == "预设二"
             reloaded.delete_preset("预设二")
             assert MyShelf(file_path=str(path)).get("last_preset") is None
+
+    def test_existing_presets_keep_their_inpaint_settings(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "settings.json"
+            presets = {"existing": {"inpaint_full_res": True}, "new": {"inpaint_full_res_padding": 128}}
+            path.write_text(json.dumps({"presets": presets}), encoding="utf-8")
+            shelf = MyShelf(file_path=str(path))
+            assert shelf.get("presets")["existing"] == {
+                "inpaint_full_res": True, "inpaint_full_res_padding": 10,
+            }
+            assert shelf.get("presets")["new"]["inpaint_full_res_padding"] == 128
+            shelf.save()
+            assert MyShelf(file_path=str(path)).get("presets") == shelf.get("presets")
 
     def test_storage_errors_are_reported(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -58,7 +71,7 @@ class PresetTests(unittest.TestCase):
             "batch_size": 2, "steps": 5, "cfg_scale": 5.0, "sampler_index": "Euler",
             "restore_faces": False, "tiling": False, "denoising_strength": 0.6,
             "resize_mode": "Just Resize", "mask_blur": 4, "inpainting_fill": "original",
-            "inpaint_full_res": True, "invert_mask": True,
+            "inpaint_full_res": True, "inpaint_full_res_padding": 32, "invert_mask": True,
         }
         text = build_request(values, "global suffix", "global negative", (384, 256))
         assert text["prompt"] == "local prompt global suffix"
@@ -91,7 +104,12 @@ class PresetTests(unittest.TestCase):
         assert (inpaint["width"], inpaint["height"]) == (512, 512)
         assert inpaint["inpainting_fill"] == 1
         assert inpaint["inpainting_mask_invert"] == 1
-        assert insertion_size(values, (384, 256), (640, 512)) == (640, 512)
+        assert insertion_size(values, (384, 256), (768, 512)) == (768, 512)
+        for padding in (0, 32, 128):
+            values["inpaint_full_res_padding"] = padding
+            assert build_request(values, "", "", (384, 256))["inpaint_full_res_padding"] == padding
+        values["inpaint_full_res"] = False
+        assert insertion_size(values, (384, 256), (768, 512)) == (512, 512)
         values["generation_mode"] = "txt2img"
         values["insert_mode"] = "Aspect fit"
         assert insertion_size(values, (384, 256), (640, 512)) == (256, 256)

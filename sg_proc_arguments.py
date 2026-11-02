@@ -271,12 +271,19 @@ def PLUGIN_FIELDS_INPAINTING(procedure: Gimp.Procedure, inpaint_fill_modes: list
     )
     procedure.add_boolean_argument(
         "inpaint_full_res",
-        _("Inpaint Whole Picture"),
-        _("""Refers to the inpaint area. It can be either true or false.
-
-        If set to true, inpaint area will be the same resolution as the starting image.
-        If set to false, inpaint area will stretch to fit the starting image."""),
-        True,
+        _("Inpaint area"),
+        _("Whole picture samples the entire source; "
+          "Only masked samples the mask area and composites it into the source"),
+        False,
+        GObject.ParamFlags.READWRITE,
+    )
+    procedure.add_int_argument(
+        "inpaint_full_res_padding",
+        _("Only masked padding, pixels"),
+        _("Context added around the mask before sampling in Only masked mode"),
+        0,
+        256,
+        32,
         GObject.ParamFlags.READWRITE,
     )
     procedure.add_choice_argument(

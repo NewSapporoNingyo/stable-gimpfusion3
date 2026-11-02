@@ -6,7 +6,7 @@ import json
 import math
 import threading
 
-from typing import Any
+from typing import Any, cast
 
 import gi
 import requests
@@ -32,24 +32,22 @@ from sg_proc_arguments import (
     PLUGIN_FIELDS_INPAINTING,
     PLUGIN_FIELDS_RESIZE_MODE,
 )
-from sg_structures import (
-    Layer,
-    LayerData,
-    ResponseLayers,
-    getActiveLayerAsBase64,
-    getActiveMaskAsBase64,
-    getLayerAsBase64,
-)
+from sg_sources import GenerationSource, PixelSnapshot
+from sg_structures import Layer, LayerData, ResponseLayers
 from sg_utils import get_progress_at_background, make_choice_from_list
 
 gi.require_version("Gimp", "3.0")
 gi.require_version("GimpUi", "3.0")
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gimp, GimpUi, GLib, GObject, Gtk
+from gi.repository import GdkPixbuf, Gimp, GimpUi, GLib, GObject, Gtk
 
 
 class GenerationPluginBase(PluginBase):
     initial_mode: str
+    sensitivity_mask = (
+        Gimp.ProcedureSensitivityMask.DRAWABLE | Gimp.ProcedureSensitivityMask.DRAWABLES
+        | Gimp.ProcedureSensitivityMask.NO_DRAWABLES
+    )
 
     def add_arguments(self, procedure: Gimp.Procedure) -> None:
         flags = GObject.ParamFlags.READWRITE
@@ -113,16 +111,22 @@ class GenerationPluginBase(PluginBase):
         drawables: list[Gimp.Drawable], config: Gimp.ProcedureConfig, data: Any,
     ) -> Gimp.ProcedureReturn:
         try:
+            source = None
             if run_mode == Gimp.RunMode.INTERACTIVE:
                 config.set_property("generation_mode", self.initial_mode)
                 GimpUi.init(procedure.get_name())
                 editor = GenerationDialog(self, procedure, config, image)
-                accepted = editor.dialog.run()
-                editor.dialog.destroy()
-                if not accepted:
+                while editor.dialog.run():
+                    editor.refresh_source()
+                    if editor.ready:
+                        break
+                else:
+                    editor.dialog.destroy()
                     return procedure.new_return_values(Gimp.PDBStatusType.CANCEL, GLib.Error())
+                source = editor.source
+                editor.dialog.destroy()
             values = self.collect_values(config)
-            self.generate(image, config, values)
+            self.generate(image, config, values, source)
             return procedure.new_return_values(Gimp.PDBStatusType.SUCCESS, GLib.Error())
         except (requests.RequestException, ValueError, OSError) as error:
             Gimp.message(str(error))
@@ -130,18 +134,24 @@ class GenerationPluginBase(PluginBase):
         finally:
             Gimp.progress_end()
 
-    def generate(self, image: Gimp.Image, config: Gimp.ProcedureConfig, values: dict[str, Any]) -> None:
-        _success, _non_empty, x1, y1, x2, y2 = Gimp.Selection.bounds(image)
+    def generate(
+        self, image: Gimp.Image, config: Gimp.ProcedureConfig, values: dict[str, Any],
+        source: GenerationSource | None = None,
+    ) -> None:
+        mode = values["generation_mode"]
+        if source is None:
+            source = GenerationSource.capture(image, mode)
+        problem = source.problem(mode, values["invert_mask"])
+        if problem:
+            raise ValueError(problem)
+        x1, y1, x2, y2 = source.selection_bounds
         size = x2 - x1, y2 - y1
         data = build_request(values, self.settings.get("prompt"), self.settings.get("negative_prompt"), size)
-        mode = values["generation_mode"]
+        cache_enabled = bool(self.settings.get("cache_tobase64", True))
         if mode != "txt2img":
-            data["init_images"] = [getActiveLayerAsBase64(image)]
+            data["init_images"] = [cast(PixelSnapshot, source.pixels).to_base64(cache_enabled=cache_enabled)]
         if mode == "inpaint":
-            mask = getActiveMaskAsBase64(image)
-            if not mask:
-                raise ValueError(_("Inpainting must use either a selection or layer mask"))
-            data["mask"] = mask
+            data["mask"] = cast(PixelSnapshot, source.mask).to_base64(cache_enabled=cache_enabled)
         units = []
         for slot in (1, 2):
             if values[f"cn{slot}_enabled"]:
@@ -151,7 +161,7 @@ class GenerationPluginBase(PluginBase):
                 unit = {name: values[f"cn{slot}_{name}"] for name in CONTROLNET_PARAMETERS}
                 unit["resize_mode"] = CONTROLNET_RESIZE_MODES.index(unit["resize_mode"])
                 unit["control_mode"] = CONTROL_MODES.index(unit["control_mode"])
-                unit["image"] = getLayerAsBase64(layer)
+                unit["image"] = Layer(layer).toBase64()
                 if layer.get_mask() is not None:
                     unit["mask_image"] = Layer(layer).maskToBase64()
                 units.append(unit)
@@ -169,10 +179,10 @@ class GenerationPluginBase(PluginBase):
         Gimp.progress_set_text(_("Inserting layers from response"))
         layers = ResponseLayers(image, response, {"skip_annotator_layers": values["cn_skip_annotator_layers"]})
         if mode == "txt2img":
-            layers.resize(*size, strategy=values["insert_mode"]).translate((x1, y1)).addSelectionAsMask()
-        elif mode == "inpaint":
-            width, height = (image.get_width(), image.get_height()) if values["inpaint_full_res"] else size
-            layers.resize(width, height)
+            layers.resize(*size, strategy=values["insert_mode"]).translate((x1, y1))
+            layers.addSelectionAsMask(source.selection)
+        else:
+            layers.translate(source.offset)
 
 
 class GenerationDialog:
@@ -183,8 +193,13 @@ class GenerationDialog:
         self.procedure = procedure
         self.config = config
         self.image = image
+        self.source_mode = ""
+        self.source_error = ""
+        self.source: GenerationSource
+        self.ready = False
         self.active_preset = ""
         self.dialog = GimpUi.ProcedureDialog.new(procedure, config, _("GimpFusion generation"))
+        self.dialog.set_ok_label(_("Generate"))
         content = self.dialog.get_content_area()
         settings_buttons = next(child for child in content.get_children() if isinstance(child, Gtk.ButtonBox))
         settings_buttons.set_no_show_all(True)
@@ -212,6 +227,8 @@ class GenerationDialog:
         self.dimension_label = Gtk.Label(xalign=0, wrap=True)
         self.dimension_label.set_no_show_all(True)
         root.pack_start(self.dimension_label, False, False, 0)
+        self.input_label = Gtk.Label(xalign=0, wrap=True)
+        root.pack_start(self.input_label, False, False, 0)
         scroll = Gtk.ScrolledWindow()
         scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         scroll.set_overlay_scrolling(False)
@@ -222,6 +239,14 @@ class GenerationDialog:
         self.dialog.get_widget("generation_mode", Gtk.ComboBox.__gtype__)
         self.dialog.get_widget("sd_model_checkpoint", Gtk.ComboBox.__gtype__)
         body.add(self.dialog.fill_box("mode_model", ["generation_mode", "sd_model_checkpoint"]))
+        source_frame = Gtk.Frame(label=_("Input source"))
+        source_box = Gtk.Box(spacing=10, margin=8)
+        source_frame.add(source_box)
+        self.source_preview = Gtk.Image()
+        source_box.pack_start(self.source_preview, False, False, 0)
+        self.source_label = Gtk.Label(xalign=0, wrap=True, selectable=True)
+        source_box.pack_start(self.source_label, True, True, 0)
+        body.add(source_frame)
         add_textarea_to_container(procedure, config, "prompt", body)
         add_textarea_to_container(procedure, config, "negative-prompt", body)
         seed_widget = self.dialog.get_widget("seed", GimpUi.LabelSpin.__gtype__)
@@ -245,11 +270,20 @@ class GenerationDialog:
         for column, name in enumerate(("seed", "steps", "cfg_scale", "batch_size")):
             grid.attach(self.dialog.fill_box(name + "_box", [name]), column, 1, 1, 1)
         body.add(self.dialog.fill_box("common_options", ["sampler_index", "restore_faces", "tiling"]))
+        self.padding_widget = self.dialog.get_scale_entry("inpaint_full_res_padding", 1)
+        self.padding_widget.set_increments(4, 32)
         self.mode_boxes = {
             "txt2img": self.dialog.fill_box("txt_options", ["insert_mode"]),
             "image": self.dialog.fill_box("image_options", ["denoising_strength", "resize_mode", "mask_blur"]),
-            "inpaint": self.dialog.fill_box("inpaint_options", ["invert_mask", "inpaint_full_res", "inpainting_fill"]),
+            "inpaint": self.dialog.fill_box(
+                "inpaint_options", ["invert_mask", "inpainting_fill", "inpaint_full_res_padding"],
+            ),
         }
+        area = GimpUi.prop_boolean_radio_frame_new(
+            config, "inpaint-full-res", _("Inpaint area"), _("Only masked"), _("Whole picture"),
+        )
+        self.mode_boxes["inpaint"].pack_start(area, False, False, 0)
+        self.mode_boxes["inpaint"].reorder_child(area, 0)
         for box in self.mode_boxes.values():
             body.add(box)
         self.size_label = Gtk.Label(xalign=0, wrap=True)
@@ -268,6 +302,7 @@ class GenerationDialog:
         root.show_all()
         self.dialog.resize(860, 760)
         config.connect("notify", self.refresh_mode)
+        self.dialog.connect("focus-in-event", self.refresh_source)
         for spin in self.dimension_spins:
             spin.connect("changed", self.refresh_mode)
         last = plugin.settings.get("last_preset")
@@ -292,15 +327,19 @@ class GenerationDialog:
 
     def refresh_mode(self, *_args: Any) -> None:
         mode = self.config.get_property("generation_mode")
+        if mode != self.source_mode:
+            self.refresh_source()
+            return
         self.mode_boxes["txt2img"].set_visible(mode == "txt2img")
         self.mode_boxes["image"].set_visible(mode != "txt2img")
         self.mode_boxes["inpaint"].set_visible(mode == "inpaint")
+        self.padding_widget.set_sensitive(self.config.get_property("inpaint_full_res"))
         use_dimensions = not (
             mode == "txt2img" and self.config.get_property("insert_mode") == "Use selection size"
         )
         self.width_box.set_sensitive(use_dimensions)
         self.height_box.set_sensitive(use_dimensions)
-        _success, _non_empty, x1, y1, x2, y2 = Gimp.Selection.bounds(self.image)
+        x1, y1, x2, y2 = self.source.selection_bounds
         values = {name: self.config.get_property(name) for name in (
             "generation_mode", "insert_mode", "width", "height", "inpaint_full_res",
         )}
@@ -315,22 +354,59 @@ class GenerationDialog:
         self.dimension_label.set_visible(not valid_dimensions)
         self.save_button.set_sensitive(bool(self.active_preset) and valid_dimensions)
         self.save_as_button.set_sensitive(valid_dimensions)
-        self.dialog.set_response_sensitive(Gtk.ResponseType.OK, valid_dimensions or not use_dimensions)
+        problem = self.source_error or self.source.problem(mode, self.config.get_property("invert_mask"))
+        self.input_label.set_text(problem)
+        self.ready = (valid_dimensions or not use_dimensions) and not problem
+        self.dialog.set_response_sensitive(Gtk.ResponseType.OK, self.ready)
         if use_dimensions and not valid_dimensions:
             self.size_label.set_text("")
             return
         width, height = generation_size(values, (x2 - x1, y2 - y1))
+        source_size = (
+            (self.source.pixels.width, self.source.pixels.height)
+            if self.source.pixels is not None else self.source.image_size
+        )
         area_width, area_height = insertion_size(
-            values, (x2 - x1, y2 - y1), (self.image.get_width(), self.image.get_height()),
+            values, (x2 - x1, y2 - y1), source_size,
         )
         self.size_label.set_text(_("Request: {width} x {height}; insertion area: {area_width} x {area_height}").format(
             width=width, height=height, area_width=area_width, area_height=area_height,
         ))
-        if mode == "inpaint":
-            layer = self.image.get_selected_layers()[0]
-            self.size_label.set_text(self.size_label.get_text() + "\n" + _("Source: {width} x {height}").format(
-                width=layer.get_width(), height=layer.get_height(),
+
+    def refresh_source(self, *_args: Any) -> bool:
+        self.source_mode = self.config.get_property("generation_mode")
+        try:
+            self.source = GenerationSource.capture(self.image, self.source_mode)
+        except ValueError as error:
+            self.source_error = str(error)
+            self.source_label.set_text(self.source_error)
+            self.source_preview.clear()
+            self.refresh_mode()
+            return False
+        self.source_error = ""
+        source = self.source
+        lines = [_("Target image: {name}").format(name=source.image_name)]
+        x1, y1, x2, y2 = source.selection_bounds
+        lines.append(_("Selection: ({x}, {y}), {width} x {height}").format(
+            x=x1, y=y1, width=x2 - x1, height=y2 - y1,
+        ) if source.selection is not None else _("Selection: whole image"))
+        self.source_preview.clear()
+        if source.pixels is not None:
+            pixels = source.pixels
+            lines.append(_("Source layer: {name}").format(name=source.layer_name))
+            lines.append(_("Source: {width} x {height}; offset: ({x}, {y})").format(
+                width=pixels.width, height=pixels.height, x=source.offset[0], y=source.offset[1],
             ))
+            scale = min(128 / pixels.width, 96 / pixels.height, 1)
+            self.source_preview.set_from_pixbuf(pixels.pixbuf().scale_simple(
+                max(1, int(pixels.width * scale)), max(1, int(pixels.height * scale)), GdkPixbuf.InterpType.BILINEAR,
+            ))
+        if self.source_mode == "inpaint":
+            mask_name = {"selection": _("Current selection"), "layer": _("Source layer mask"), "": _("Create a mask")}
+            lines.append(_("Mask source: {name}").format(name=mask_name[source.mask_source]))
+        self.source_label.set_text("\n".join(lines))
+        self.refresh_mode()
+        return False
 
     def load_selected(self, _button: Gtk.Button | None = None, *, same_mode_only: bool = False) -> None:
         name = self.preset_list.get_active_id()
