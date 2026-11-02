@@ -39,11 +39,11 @@
 
 验收记录见 [S3 来源图层与蒙版](doc/s3-sources.md)。
 
-- [ ] 显示目标图像、来源图层名称与缩略图、实际蒙版来源。
-- [ ] 在窗口获得焦点和生成时刷新来源，使展示与实际输入一致。
-- [ ] 验收切换图层、修改图层、选区重绘和图层蒙版重绘。
-- [ ] 将inpaiting窗口中的重绘区域设置改为类似webui的whole picture/only masked，并验证重绘时是否实际使用全图/局部。
-- [ ] 在inpaiting窗口中增加类似webui的Only masked padding参数，并验证参数是否有效。
+- [x] 显示目标图像、来源图层名称与缩略图、实际蒙版来源。
+- [x] 在窗口获得焦点和生成时刷新来源，使展示与实际输入一致。
+- [x] 验收切换图层、修改图层、选区重绘和图层蒙版重绘。
+- [x] 将inpaiting窗口中的重绘区域设置改为类似webui的whole picture/only masked，并验证重绘时是否实际使用全图/局部。
+- [x] 在inpaiting窗口中增加类似webui的Only masked padding参数，并验证参数是否有效。
 
 <a id="s4"></a>
 
