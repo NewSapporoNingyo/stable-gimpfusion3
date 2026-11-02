@@ -19,10 +19,8 @@ class PixelSnapshotTests(unittest.TestCase):
         assert PixelSnapshot.cache == {}
 
     def test_mask_crop_uses_offsets_and_black_outside_canvas(self) -> None:
-        from gi.repository import Gegl
-
-        Gegl.init(None)
-        selection = PixelSnapshot(3, 2, 3, bytes([0, 0, 0, 255, 255, 255, 0, 0, 0] * 2))
-        assert selection.crop(1, 0, 2, 2).data == bytes([255, 255, 255, 0, 0, 0] * 2)
+        selection = PixelSnapshot(3, 2, 3, bytes([0, 0, 0, 64, 64, 64, 0, 0, 0,
+                                              255, 255, 255, 128, 128, 128, 0, 0, 0]))
+        assert selection.crop(1, 0, 2, 2).data[::3] == bytes([64, 0, 128, 0])
         negative = selection.crop(-1, -1, 3, 3)
-        assert negative.data == bytes([0] * 9 + [0] * 6 + [255] * 3 + [0] * 6 + [255] * 3)
+        assert negative.data[::3] == bytes([0, 0, 0, 0, 0, 64, 0, 255, 128])

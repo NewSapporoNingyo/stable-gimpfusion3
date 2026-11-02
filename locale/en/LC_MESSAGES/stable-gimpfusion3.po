@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: stable-gimpfusion3 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-02 19:31+0900\n"
+"POT-Creation-Date: 2026-11-02 19:40+0900\n"
 "PO-Revision-Date: 2025-12-15 11:18+0300\n"
 "Last-Translator: shsmad <shsmad@gmail.com>\n"
 "Language-Team: English\n"
@@ -25,19 +25,19 @@ msgstr "Seed must be an integer from -1 to 4294967295"
 msgid "Width and height must be multiples of 8"
 msgstr "Width and height must be multiples of 8"
 
-#: sg_sources.py:82
+#: sg_sources.py:95
 msgid "Open the target image"
 msgstr "Open the target image"
 
-#: sg_sources.py:112
+#: sg_sources.py:125
 msgid "Select a source layer"
 msgstr "Select a source layer"
 
-#: sg_sources.py:115
+#: sg_sources.py:128
 msgid "Create a selection or add a source layer mask"
 msgstr "Create a selection or add a source layer mask"
 
-#: sg_sources.py:118
+#: sg_sources.py:131
 msgid "Provide a mask with an area to inpaint within the source layer"
 msgstr "Provide a mask with an area to inpaint within the source layer"
 

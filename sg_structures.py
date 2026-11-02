@@ -192,7 +192,7 @@ class Layer:
         return self
 
     def maskToBase64(self) -> str:
-        return PixelSnapshot.read(self.layer.get_mask(), alpha=False).to_base64(
+        return PixelSnapshot.read_mask(self.layer.get_mask()).to_base64(
             cache_enabled=self._is_cache_enabled(),
         )
 
@@ -335,7 +335,7 @@ class ResponseLayers:
                 pixels = selection.crop(x, y, width, height)
                 mask = layer.create_mask(Gimp.AddMaskType.WHITE)
                 buffer = mask.get_buffer()
-                buffer.set(Gegl.Rectangle.new(0, 0, width, height), "R'G'B' u8", pixels.data)
+                buffer.set(Gegl.Rectangle.new(0, 0, width, height), "Y u8", pixels.data[::3])
                 buffer.flush()
                 layer.add_mask(mask)
         return self

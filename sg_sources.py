@@ -17,6 +17,8 @@ gi.require_version("Gegl", "0.4")
 gi.require_version("GdkPixbuf", "2.0")
 from gi.repository import GdkPixbuf, Gegl, Gimp, GLib
 
+Gegl.init(None)
+
 
 @dataclass(frozen=True)
 class PixelSnapshot:
@@ -36,6 +38,17 @@ class PixelSnapshot:
             "R'G'B'A u8" if alpha else "R'G'B' u8", Gegl.AbyssPolicy.NONE,
         )
         return cls(width, height, channels, pixels)
+
+    @classmethod
+    def read_mask(cls, drawable: Gimp.Drawable) -> PixelSnapshot:
+        width, height = drawable.get_width(), drawable.get_height()
+        coverage = drawable.get_buffer().get(
+            Gegl.Rectangle.new(0, 0, width, height), 1.0, "Y u8", Gegl.AbyssPolicy.NONE,
+        )
+        pixels = bytearray(width * height * 3)
+        for channel in range(3):
+            pixels[channel::3] = coverage
+        return cls(width, height, 3, bytes(pixels))
 
     def pixbuf(self) -> GdkPixbuf.Pixbuf:
         return GdkPixbuf.Pixbuf.new_from_bytes(
@@ -81,7 +94,7 @@ class GenerationSource:
         if not image.is_valid():
             raise ValueError(_("Open the target image"))
         _success, selected, x1, y1, x2, y2 = Gimp.Selection.bounds(image)
-        selection = PixelSnapshot.read(image.get_selection(), alpha=False) if selected else None
+        selection = PixelSnapshot.read_mask(image.get_selection()) if selected else None
         layer_name, offset, mask_source = "", (0, 0), ""
         pixels: PixelSnapshot | None = None
         mask: PixelSnapshot | None = None
@@ -98,7 +111,7 @@ class GenerationSource:
                         mask = selection.crop(x, y, pixels.width, pixels.height)
                         mask_source = "selection"
                     elif layer.get_mask() is not None:
-                        mask = PixelSnapshot.read(layer.get_mask(), alpha=False)
+                        mask = PixelSnapshot.read_mask(layer.get_mask())
                         mask_source = "layer"
         return cls(
             image.get_name(), (image.get_width(), image.get_height()), (x1, y1, x2, y2), selection,
