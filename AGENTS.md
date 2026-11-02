@@ -93,6 +93,7 @@ git -C "C:\Users\LHR\AppData\Roaming\GIMP\3.2\plug-ins\stable-gimpfusion3" pull 
 - 同步到插件目录后，在 GIMP 中检查菜单加载、Forge API 连接和受影响的生成或图层操作。
 - 交付时说明改动内容、检查命令和结果，以及 GIMP 内的验证情况。
 - 当在codex中需要使用computer use（电脑操控）时，注意本设备上的computer use的窗口截图功能存在问题，必要时需使用全屏截图。
+- 每次开发任务结束后注意终止webui forge实例，避免其留存在agent内置终端中持续占用系统资源。
 
 ## 提交信息
 
