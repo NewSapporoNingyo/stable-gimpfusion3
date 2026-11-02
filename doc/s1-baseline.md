@@ -192,4 +192,6 @@ Forge 源码核对位置：`modules/processing.py` 的 `StableDiffusionProcessin
 
 修改的 Python 文件执行 `ruff check sg_plugins/img2img.py`，结果为 `All checks passed!`。本次代码改动删除图生图请求中的强制 Never OOM 设置。
 
-开发目录与 GIMP 插件目录均位于 `main`，跟踪相同的 `origin/main`。按仓库规范提交后，依次执行开发目录 `push` 和插件目录 `pull --ff-only`，再重启 GIMP 检查菜单和图生图。
+开发目录与 GIMP 插件目录均位于 `main`，跟踪相同的 `origin/main`。已按仓库规范完成提交、开发目录 `push` 和插件目录 `pull --ff-only`。
+
+同步后重启正常配置的 GIMP，确认 GimpFusion 菜单包含配置、文生图、图生图、局部重绘和 ControlNet 图层入口。通过安装副本的 `stable-gimpfusion-img2img` 再次生成成功，返回 `SUCCESS`；生成层的 seed 为 22345、尺寸为 384×256，包含对应的 infotext，并已在 GIMP 图层面板中显示。
