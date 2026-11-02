@@ -63,7 +63,7 @@ def build_request(
     data.update({
         "prompt": f"{values['prompt']} {prompt_suffix}".strip(),
         "negative_prompt": f"{values['negative_prompt']} {negative_suffix}".strip(),
-        "seed": integer_seed(values["seed"]), "width": width, "height": height,
+        "seed": values["seed"], "width": width, "height": height,
     })
     if values["generation_mode"] == "txt2img":
         data["enable_hr"] = False
