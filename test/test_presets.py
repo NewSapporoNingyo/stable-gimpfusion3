@@ -1,0 +1,83 @@
+from __future__ import annotations
+
+import json
+import tempfile
+import unittest
+
+from pathlib import Path
+
+from sg_generation import build_request, generation_size, insertion_size, integer_seed
+from sg_structures import MyShelf
+
+
+class PresetTests(unittest.TestCase):
+    def test_legacy_settings_and_named_presets_survive_reload(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "settings.json"
+            path.write_text('{"api_base": "http://example.test", "prompt": "suffix"}', encoding="utf-8")
+            shelf = MyShelf({"steps": 20}, file_path=str(path))
+            assert shelf.get("presets") == {}
+            preset = {"generation_mode": "txt2img", "seed": 0, "loras": [
+                {"name": "model", "alias": "tag", "weight": 0.75, "enabled": True},
+            ]}
+            shelf.save_preset("预设一", preset)
+            shelf.save_preset("预设二", {**preset, "seed": 4294967295})
+            reloaded = MyShelf(file_path=str(path))
+            assert reloaded.get("presets")["预设一"] == preset
+            assert reloaded.get("last_preset") == "预设二"
+            assert reloaded.get("prompt") == "suffix"
+            assert reloaded.get("api_base") == "http://example.test"
+            assert reloaded.get("steps") == 20
+            assert "预设一" in path.read_text(encoding="utf-8")
+            reloaded.delete_preset("预设一")
+            assert reloaded.get("last_preset") == "预设二"
+            reloaded.delete_preset("预设二")
+            assert MyShelf(file_path=str(path)).get("last_preset") is None
+
+    def test_storage_errors_are_reported(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "settings.json"
+            path.write_text("{", encoding="utf-8")
+            with self.assertRaises(json.JSONDecodeError):  # noqa: PT027
+                MyShelf(file_path=str(path))
+            shelf = MyShelf(file_path=str(Path(directory) / "missing" / "settings.json"))
+            with self.assertRaises(FileNotFoundError):  # noqa: PT027
+                shelf.save()
+
+    def test_seed_values_are_preserved(self) -> None:
+        for value in (-1, 0, 70000, 4294967295):
+            assert integer_seed(float(value)) == value
+        for invalid_seed in (-2, 0.5, 4294967296):
+            with self.assertRaises(ValueError):  # noqa: PT027
+                integer_seed(invalid_seed)
+
+    def test_mode_sizes_and_prompts_match_requests(self) -> None:
+        values = {
+            "generation_mode": "txt2img", "width": 513, "height": 516, "insert_mode": "Resize to selection",
+            "prompt": "local prompt", "negative_prompt": "local negative", "seed": 0,
+            "batch_size": 2, "steps": 5, "cfg_scale": 5.0, "sampler_index": "Euler",
+            "restore_faces": False, "tiling": False, "denoising_strength": 0.6,
+            "resize_mode": "Just Resize", "mask_blur": 4, "inpainting_fill": "original",
+            "inpaint_full_res": True, "invert_mask": True,
+        }
+        text = build_request(values, "global suffix", "global negative", (384, 256))
+        assert text["prompt"] == "local prompt global suffix"
+        assert text["negative_prompt"] == "local negative global negative"
+        assert (text["width"], text["height"]) == (512, 512)
+        assert text["seed"] == 0
+        assert "denoising_strength" not in text
+        values["insert_mode"] = "Use selection size"
+        assert generation_size(values, (383, 259)) == (384, 256)
+        values["generation_mode"] = "img2img"
+        image = build_request(values, "", "", (383, 259))
+        assert (image["width"], image["height"]) == (384, 256)
+        assert image["denoising_strength"] == 0.6
+        values["generation_mode"] = "inpaint"
+        inpaint = build_request(values, "", "", (384, 256))
+        assert (inpaint["width"], inpaint["height"]) == (512, 512)
+        assert inpaint["inpainting_fill"] == 1
+        assert inpaint["inpainting_mask_invert"] == 1
+        assert insertion_size(values, (384, 256), (640, 512)) == (640, 512)
+        values["generation_mode"] = "txt2img"
+        values["insert_mode"] = "Aspect fit"
+        assert insertion_size(values, (384, 256), (640, 512)) == (256, 256)

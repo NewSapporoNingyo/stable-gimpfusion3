@@ -631,3 +631,71 @@ msgstr ""
 #: sg_proc_arguments.py:363
 msgid "Threshold B for ControlNet"
 msgstr ""
+
+msgid "Cancel"
+msgstr "Cancel"
+
+msgid "ControlNet preprocessing resolution"
+msgstr "ControlNet preprocessing resolution"
+
+msgid "ControlNet {slot} parameters"
+msgstr "ControlNet {slot} parameters"
+
+msgid "Current preset: {name}"
+msgstr "Current preset: {name}"
+
+msgid "Delete preset"
+msgstr "Delete preset"
+
+msgid "Enter a preset name"
+msgstr "Enter a preset name"
+
+msgid "Generating image"
+msgstr "Generating image"
+
+msgid "Generation mode"
+msgstr "Generation mode"
+
+msgid "GimpFusion generation"
+msgstr "GimpFusion generation"
+
+msgid "Invalid preset field: {field}"
+msgstr "Invalid preset field: {field}"
+
+msgid "Load preset"
+msgstr "Load preset"
+
+msgid "Preset name already exists"
+msgstr "Preset name already exists"
+
+msgid "Read layer settings"
+msgstr "Read layer settings"
+
+msgid ""
+"Request: {width} x {height}; insertion area: {area_width} x {area_height}"
+msgstr ""
+"Request: {width} x {height}; insertion area: {area_width} x {area_height}"
+
+msgid "Save preset"
+msgstr "Save preset"
+
+msgid "Save preset as"
+msgstr "Save preset as"
+
+msgid "Seed must be an integer from -1 to 4294967295"
+msgstr "Seed must be an integer from -1 to 4294967295"
+
+msgid "Seed: -1 for random, 0 or a positive integer for a fixed result"
+msgstr "Seed: -1 for random, 0 or a positive integer for a fixed result"
+
+msgid "Select a ControlNet input layer from the current image"
+msgstr "Select a ControlNet input layer from the current image"
+
+msgid "Source: {width} x {height}"
+msgstr "Source: {width} x {height}"
+
+msgid "Unavailable preset option: {field} = {value}"
+msgstr "Unavailable preset option: {field} = {value}"
+
+msgid "Unsaved parameters"
+msgstr "Unsaved parameters"

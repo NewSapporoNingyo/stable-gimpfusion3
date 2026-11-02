@@ -72,13 +72,13 @@ def PLUGIN_FIELDS_COMMON(procedure: Gimp.Procedure, samplers: list[str], selecte
         "",
         GObject.ParamFlags.READWRITE,
     )
-    procedure.add_int_argument(
+    procedure.add_double_argument(
         "seed",
         _("Seed"),
-        _("Value that determines the output of a random number generator (0 or -1 for random)"),
-        0,
-        65535,
-        0,
+        _("Seed: -1 for random, 0 or a positive integer for a fixed result"),
+        -1,
+        4294967295,
+        -1,
         GObject.ParamFlags.READWRITE,
     )
     procedure.add_int_argument(
@@ -301,89 +301,26 @@ def PLUGIN_FIELDS_CONTROLNET(
     cn_models: list[str],
     cn_resize_modes: list[str],
     control_modes: list[str],
+    prefix: str = "",
 ) -> None:
-    procedure.add_choice_argument(
-        "module",
-        _("Module"),
-        _("Module to use for controlnet"),
-        make_choice_from_list(cn_modules),
-        cn_modules[0],
-        GObject.ParamFlags.READWRITE,
-    )
-    procedure.add_choice_argument(
-        "model",
-        _("Model"),
-        _("Model to use for controlnet"),
-        make_choice_from_list(cn_models),
-        cn_models[0],
-        GObject.ParamFlags.READWRITE,
-    )
-    procedure.add_double_argument(
-        "weight",
-        _("Weight"),
-        _("""Determines how closely the control map should follow the prompt.
-By default it is 1 and it will deviate from the control map as it gets closer to 0"""),
-        0,
-        2,
-        1,
-        GObject.ParamFlags.READWRITE,
-    )
-    procedure.add_choice_argument(
-        "resize_mode",
-        _("Resize Mode"),
-        _("Resize Mode for ControlNet"),
-        make_choice_from_list(cn_resize_modes),
-        cn_resize_modes[0],
-        GObject.ParamFlags.READWRITE,
-    )
-    procedure.add_boolean_argument(
-        "lowvram",
-        _("Low VRAM"),
-        _("Only recommended if you have less than 8gb VRAM"),
-        False,
-        GObject.ParamFlags.READWRITE,
-    )
-    procedure.add_choice_argument(
-        "control_mode",
-        _("Control Mode"),
-        _("Control Mode for ControlNet"),
-        make_choice_from_list(control_modes),
-        control_modes[0],
-        GObject.ParamFlags.READWRITE,
-    )
-    procedure.add_double_argument(
-        "guidance_start",
-        _("Guidance Start (T)"),
-        _("Guidance Start (T) for ControlNet"),
-        0,
-        1,
-        0,
-        GObject.ParamFlags.READWRITE,
-    )
-    procedure.add_double_argument(
-        "guidance_end",
-        _("Guidance End (T)"),
-        _("Guidance End (T) for ControlNet"),
-        0,
-        1,
-        1,
-        GObject.ParamFlags.READWRITE,
-    )
-    procedure.add_double_argument(
-        "guidance", _("Guidance"), _("Guidance for ControlNet"), 0, 1, 1, GObject.ParamFlags.READWRITE,
-    )
+    for name, label, choices in (
+        ("module", _("Module"), cn_modules), ("model", _("Model"), cn_models),
+        ("resize_mode", _("Resize Mode"), cn_resize_modes), ("control_mode", _("Control Mode"), control_modes),
+    ):
+        procedure.add_choice_argument(
+            prefix + name, label, label, make_choice_from_list(choices), choices[0], GObject.ParamFlags.READWRITE,
+        )
+    for name, label, minimum, maximum, value in (
+        ("weight", _("Weight"), 0, 2, 1),
+        ("guidance_start", _("Guidance Start (T)"), 0, 1, 0),
+        ("guidance_end", _("Guidance End (T)"), 0, 1, 1),
+        ("threshold_a", _("Threshold A"), -1, 2048, 64),
+        ("threshold_b", _("Threshold B"), -1, 2048, 64),
+    ):
+        procedure.add_double_argument(
+            prefix + name, label, label, minimum, maximum, value, GObject.ParamFlags.READWRITE,
+        )
     procedure.add_int_argument(
-        "processor_res",
-        _("Processor Resolution"),
-        _("set this to 512. There’s an ongoing bug that results in the cv2 error if it’s not set"),
-        64,
-        2048,
-        512,
-        GObject.ParamFlags.READWRITE,
-    )
-    procedure.add_int_argument(
-        "threshold_a", _("Threshold A"), _("Threshold A for ControlNet"), 64, 2048, 64, GObject.ParamFlags.READWRITE,
-    )
-    procedure.add_int_argument(
-        "threshold_b", _("Threshold B"), _("Threshold B for ControlNet"), 64, 2048, 64, GObject.ParamFlags.READWRITE,
+        prefix + "processor_res", _("Processor Resolution"), _("ControlNet preprocessing resolution"),
+        64, 2048, 512, GObject.ParamFlags.READWRITE,
     )

@@ -41,31 +41,23 @@ def roundToMultiple(value: float | int, multiple: int) -> int:
 def fetch_stablediffusion_options(api: ApiClient) -> dict[str, Any]:
     """Get the StableDiffusion data needed for dynamic gimpfu.PF_OPTION lists"""
 
-    has_sd_modules_support = True
-
-    options = api.get("/sdapi/v1/options") or {}
-    sd_model_checkpoint = options.get("sd_model_checkpoint", None)
-    models = [x["title"].removesuffix(f" [{x.get('hash')}]") for x in api.get("/sdapi/v1/sd-models") or []]
-    sd_modules = []
-    cn_models = (api.get("/controlnet/model_list") or {}).get("model_list", [])
-
-    try:
-        sd_modules = [x["filename"] for x in api.get("/sdapi/v1/sd-modules") or []]
-    except Exception as ex:
-        has_sd_modules_support = False
-        logging.warning(f"sd-modules not supported on SD instance: {ex}")
-
-
-    # /sdapi/v1/samplers, /sdapi/v1/schedulers, /sdapi/v1/upscalers
-    # /sdapi/v1/scripts, /sdapi/v1/script-info
+    options = api.get("/sdapi/v1/options")
+    sd_model_checkpoint = options["sd_model_checkpoint"]
+    models = [x["title"].removesuffix(f" [{x['hash']}]") for x in api.get("/sdapi/v1/sd-models")]
+    cn_models = api.get("/controlnet/model_list")["model_list"]
+    cn_modules = api.get("/controlnet/module_list")["module_list"]
+    samplers = [sampler["name"] for sampler in api.get("/sdapi/v1/samplers")]
+    sd_modules = [x["filename"] for x in api.get("/sdapi/v1/sd-modules")]
 
     return {
         "models": models,
         "sd_modules": sd_modules,
         "cn_models": cn_models,
+        "cn_modules": cn_modules,
+        "samplers": samplers,
         "sd_model_checkpoint": sd_model_checkpoint,
         "is_server_running": True,
-        "has_sd_modules_support": has_sd_modules_support,
+        "has_sd_modules_support": True,
     }
 
 

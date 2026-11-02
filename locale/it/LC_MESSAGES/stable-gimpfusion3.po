@@ -666,3 +666,74 @@ msgstr "Soglia B"
 #: sg_proc_arguments.py:388
 msgid "Threshold B for ControlNet"
 msgstr "Soglia B per ControlNet"
+
+msgid "Cancel"
+msgstr "Annulla"
+
+msgid "ControlNet preprocessing resolution"
+msgstr "Risoluzione di pre-elaborazione ControlNet"
+
+msgid "ControlNet {slot} parameters"
+msgstr "Parametri ControlNet {slot}"
+
+msgid "Current preset: {name}"
+msgstr "Preimpostazione attuale: {name}"
+
+msgid "Delete preset"
+msgstr "Elimina preimpostazione"
+
+msgid "Enter a preset name"
+msgstr "Inserisci un nome per la preimpostazione"
+
+msgid "Generating image"
+msgstr "Generazione immagine"
+
+msgid "Generation mode"
+msgstr "Modalit? di generazione"
+
+msgid "GimpFusion generation"
+msgstr "Generazione GimpFusion"
+
+msgid "Invalid preset field: {field}"
+msgstr "Campo della preimpostazione non valido: {field}"
+
+msgid "Load preset"
+msgstr "Carica preimpostazione"
+
+msgid "Preset name already exists"
+msgstr "Il nome della preimpostazione esiste gi?"
+
+msgid "Read layer settings"
+msgstr "Leggi impostazioni del livello"
+
+msgid ""
+"Request: {width} x {height}; insertion area: {area_width} x {area_height}"
+msgstr ""
+"Richiesta: {width} x {height}; area di inserimento: {area_width} x "
+"{area_height}"
+
+msgid "Save preset"
+msgstr "Salva preimpostazione"
+
+msgid "Save preset as"
+msgstr "Salva preimpostazione come"
+
+msgid "Seed must be an integer from -1 to 4294967295"
+msgstr "Il seed deve essere un numero intero da -1 a 4294967295"
+
+msgid "Seed: -1 for random, 0 or a positive integer for a fixed result"
+msgstr ""
+"Seed: -1 per un risultato casuale, 0 o un intero positivo per un risultato "
+"fisso"
+
+msgid "Select a ControlNet input layer from the current image"
+msgstr "Seleziona un livello di input ControlNet nell?immagine attuale"
+
+msgid "Source: {width} x {height}"
+msgstr "Sorgente: {width} x {height}"
+
+msgid "Unavailable preset option: {field} = {value}"
+msgstr "Opzione della preimpostazione non disponibile: {field} = {value}"
+
+msgid "Unsaved parameters"
+msgstr "Parametri da salvare"

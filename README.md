@@ -23,6 +23,27 @@ Tested on Ubuntu 24.04 with PPA GIMP 3.0.6 (no sandboxed environments like AppIm
 - Restart Gimp, and you will see a new menu item called `GimpFusion`
 - Run script via `GimpFusion -> Config` and set the backend API URL base (should be `http://127.0.0.1:7860/` by default)
 
+## 命名预设（GIMP 3.2）
+
+从 `GimpFusion` 的文生图、图生图或局部重绘菜单打开生成窗口，在 `Generation mode` 中切换模式。
+
+1. 填写提示词，选择 checkpoint、采样器及生成参数。
+2. 点击 `Save preset as` 输入名称，保存一套完整预设。
+3. 在顶部列表选择预设，点击 `Load preset` 恢复模式和参数。
+4. 修改后点击 `Save preset` 更新当前预设；点击 `Delete preset` 删除列表中选中的预设。
+
+菜单决定打开时的初始模式。上次预设与该模式相同时自动恢复；跨模式预设通过 `Load preset` 载入。
+参数修改通过 `Save preset` 写入命名预设。
+
+提示词按“本次提示词 + 空格 + 全局后缀”合成。seed `-1` 表示随机，`0` 至 `4294967295` 表示指定种子。
+窗口显示实际请求尺寸和结果插入尺寸；局部重绘另显示来源尺寸。
+
+预设保存两组 ControlNet 参数。每次使用时选择当前图像中的输入图层；展开参数区可编辑处理器、模型、权重等选项。
+`Read layer settings` 将所选图层保存的 ControlNet 参数读入窗口。切换输入图层保留窗口中的参数。
+LoRA 通过提示词中的 `<lora:标识:权重>` 标签使用。
+
+详细参数规则与验收结果见 [S2 命名预设](doc/s2-presets.md)。
+
 ## Translation
 
 By default, GIMP plug-ins look up gettext compiled message catalogs in the subdirectory locale/

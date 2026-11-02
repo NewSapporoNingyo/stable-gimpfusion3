@@ -19,7 +19,7 @@ class PluginBase:
     menu_path: str = "<Image>/SHSMAD/"
     description: str
 
-    def __init__(self, api: ApiClient | None = None, settings: MyShelf | None = None) -> None:
+    def __init__(self, api: ApiClient, settings: MyShelf) -> None:
         self.api = api
         self.settings = settings
 

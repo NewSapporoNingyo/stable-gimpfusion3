@@ -9,7 +9,7 @@ import os
 import tempfile
 import time
 
-from typing import Any
+from typing import Any, ClassVar, Literal
 
 import gi
 import requests
@@ -17,7 +17,8 @@ import requests
 from sg_constants import CONTROLNET_DEFAULT_SETTINGS, INSERT_MODES
 
 gi.require_version("Gimp", "3.0")
-from gi.repository import Gegl, Gimp, Gio, GLib
+gi.require_version("Gegl", "0.4")
+from gi.repository import Gegl, Gimp, Gio
 
 from sg_utils import aspect_resize, roundToMultiple
 
@@ -33,6 +34,8 @@ _toBase64_cache_pixel_count = 1024
 class TempFiles:
     """Context manager for temporary files with automatic cleanup"""
 
+    instance: ClassVar[TempFiles]
+
     def __new__(cls) -> TempFiles:
         if not hasattr(cls, "instance"):
             cls.instance = super().__new__(cls)
@@ -44,7 +47,9 @@ class TempFiles:
     def __enter__(self) -> TempFiles:
         return self
 
-    def __exit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: Any) -> bool:
+    def __exit__(
+        self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: Any,
+    ) -> Literal[False]:
         self.removeAll()
         return False
 
@@ -274,7 +279,7 @@ class Layer:
 
 
     @staticmethod
-    def set_global_settings(settings) -> None:
+    def set_global_settings(settings: MyShelf) -> None:
         global _global_settings
         _global_settings = settings
 
@@ -441,10 +446,8 @@ class ResponseLayers:
                     )
                 if layer:
                     layers.append(layer.layer)
-        except Exception as e:
-            logging.exception(f"ResponseLayers: {e}")
-
-        Gimp.context_set_foreground(color)
+        finally:
+            Gimp.context_set_foreground(color)
         self.layers = layers
 
     def scale(self, new_scale: float = 1.0) -> ResponseLayers:
@@ -490,12 +493,12 @@ class ResponseLayers:
             Layer(layer).insertTo(image)
         return self
 
-    def addSelectionAsMask(self) -> ResponseLayers | None:
+    def addSelectionAsMask(self) -> ResponseLayers:
         success, non_empty, x1, y1, x2, y2 = Gimp.Selection.bounds(self.image)
         if not non_empty:
-            return
+            return self
         if (x1 == 0) and (y1 == 0) and (x2 - x1 == self.image.get_width()) and (y2 - y1 == self.image.get_height()):
-            return
+            return self
         for layer in self.layers:
             Layer(layer).addSelectionAsMask()
         return self
@@ -504,37 +507,36 @@ class ResponseLayers:
 class MyShelf:
     """GimpShelf is not available at init time, so we keep our persistent data in a json file"""
 
-    def __init__(self, default_shelf: dict[str, Any] | None = None) -> None:
+    def __init__(self, default_shelf: dict[str, Any] | None = None, *, file_path: str | None = None) -> None:
         if default_shelf is None:
             default_shelf = {}
-        self.file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "stable_gimpfusion.json")
+        self.file_path = file_path or os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), "stable_gimpfusion.json",
+        )
         self.load(default_shelf)
 
-    def load(self, default_shelf=None):
-        if default_shelf is None:
-            default_shelf = {}
-        self.data = default_shelf
-        try:
-            if os.path.isfile(self.file_path):
-                logging.info(f"Loading shelf from {self.file_path}")
-                with open(self.file_path) as f:
-                    self.data = json.load(f)
-                logging.info("Successfully loaded shelf")
-        except Exception as e:
-            logging.debug(e)
+    def load(self, default_shelf: dict[str, Any]) -> None:
+        self.data = {**default_shelf, "presets": {}, "last_preset": None}
+        if os.path.isfile(self.file_path):
+            with open(self.file_path, encoding="utf-8") as file:
+                self.data.update(json.load(file))
 
-    def save(self, data=None):
-        if data is None:
-            data = {}
-        try:
+    def save(self, data: dict[str, Any] | None = None) -> None:
+        if data is not None:
             self.data.update(data)
-            logging.info(f"Saving shelf to {self.file_path}")
-            with open(self.file_path, "w") as f:
-                json.dump(self.data, f)
-            logging.info("Successfully saved shelf")
+        with open(self.file_path, "w", encoding="utf-8") as file:
+            json.dump(self.data, file, ensure_ascii=False, indent=2)
 
-        except Exception as e:
-            logging.debug(e)
+    def save_preset(self, name: str, preset: dict[str, Any]) -> None:
+        self.data["presets"][name] = preset
+        self.data["last_preset"] = name
+        self.save()
+
+    def delete_preset(self, name: str) -> None:
+        del self.data["presets"][name]
+        if self.data["last_preset"] == name:
+            self.data["last_preset"] = None
+        self.save()
 
     def get(self, name, default_value=None):
         # return self.data[name] if name in self.data else default_value
@@ -563,7 +565,7 @@ class ApiClient:
             logging.debug(f"POST {url}, data {data.keys() if data else None}")
 
             response = requests.post(url=url, params=params, headers=headers, json=data, timeout=self.timeout)
-
+            response.raise_for_status()
             data = response.json()
             # response.raise_for_status()
             return data
@@ -584,7 +586,7 @@ class ApiClient:
             headers = headers or {"Content-Type": "application/json", "Accept": "application/json"}
 
             response = requests.get(url=url, params=params, headers=headers, timeout=self.timeout)
-            # response.raise_for_status()
+            response.raise_for_status()
             return response.json()
         except requests.exceptions.Timeout:
             logging.error(f"Timeout while GETting {endpoint}")
