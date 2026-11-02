@@ -147,16 +147,6 @@ class Image2imagePlugin(GenerationPluginBase):
         )
         self.add_controlnet_to_data(data, controlnet_units)
 
-        # Merge with existing alwayson_scripts if any
-        base_scripts = {
-            "never oom integrated": {
-                "args": [True, True],
-            },
-        }
-        if "alwayson_scripts" in data:
-            base_scripts.update(data["alwayson_scripts"])
-        data["alwayson_scripts"] = base_scripts
-
         try:
             response = self.call_api_with_progress(
                 "/sdapi/v1/img2img",

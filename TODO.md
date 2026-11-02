@@ -10,11 +10,13 @@
 
 详见 [开发计划 S1](doc/devplan.md#s1)。
 
-- [ ] 确认 GIMP 实际使用的 Python、GTK、Gimp/GimpUi、PyGObject 和 requests 环境。
-- [ ] 确认本机 Forge 的生成、模型、LoRA 和 ControlNet 接口。
-- [ ] 跑通三种生成模式及两种蒙版来源，明确尺寸、提示词和输入规则。
-- [ ] 确认常驻过程、临时 PDB 过程与 GTK 主循环的配合方式。
-- [ ] 排查含糊界面说明，调研 `cn_skip_annotator_layers` 等参数的实际用途、开关效果和适用模式。
+验收记录见 [S1 本机环境与运行基线](doc/s1-baseline.md)。
+
+- [x] 确认 GIMP 实际使用的 Python、GTK、Gimp/GimpUi、PyGObject 和 requests 环境。
+- [x] 确认本机 Forge 的生成、模型、LoRA 和 ControlNet 接口。
+- [x] 跑通三种生成模式及两种蒙版来源，明确尺寸、提示词和输入规则。
+- [x] 确认常驻过程、临时 PDB 过程与 GTK 主循环的配合方式。
+- [x] 排查含糊界面说明，调研 `cn_skip_annotator_layers` 等参数的实际用途、开关效果和适用模式。
 
 <a id="s2"></a>
 
