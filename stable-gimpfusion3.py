@@ -26,8 +26,7 @@ from sg_constants import (
     AUTHOR,
     STABLE_GIMPFUSION_DEFAULT_SETTINGS,
 )
-from sg_structures import Layer
-from sg_structures import ApiClient, MyShelf
+from sg_structures import ApiClient, Layer, MyShelf
 from sg_utils import fetch_stablediffusion_options, set_logging_dest
 
 settings = MyShelf(STABLE_GIMPFUSION_DEFAULT_SETTINGS)
@@ -81,7 +80,7 @@ class GimpfusionPlugin(Gimp.PlugIn):
     def do_query_procedures(self):
         return list(MODULES.keys())
 
-    def do_create_procedure(self, name: str) -> None:
+    def do_create_procedure(self, name: str) -> Gimp.Procedure:
         module = MODULES[name]
 
         procedure = Gimp.ImageProcedure.new(
@@ -102,8 +101,7 @@ class GimpfusionPlugin(Gimp.PlugIn):
         procedure.set_documentation(module.description, module.description, name)
         procedure.set_attribution(AUTHOR, AUTHOR, "2025")
 
-        if hasattr(module, "add_arguments"):
-            module.add_arguments(procedure)
+        module.add_arguments(procedure)
 
         return procedure
 
