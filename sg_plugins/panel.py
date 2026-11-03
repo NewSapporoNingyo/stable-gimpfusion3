@@ -12,7 +12,7 @@ from typing import Any, cast
 import gi
 import requests
 
-from sg_generation import GENERATION_PARAMETERS
+from sg_generation import GENERATION_MODES, GENERATION_PARAMETERS
 from sg_i18n import _
 from sg_loras import LoraCatalog
 from sg_notifications import notify_generation_finished
@@ -27,6 +27,44 @@ from gi.repository import Gdk, Gimp, GimpUi, GLib, GObject, Gtk, Pango
 
 PANEL_PROCEDURE = "stable-gimpfusion-panel"
 PANEL_COMMAND = "stable-gimpfusion-panel-command"
+GENERATE_CURRENT_PROCEDURE = "stable-gimpfusion-generate-current"
+
+
+def run_panel(
+    plugin: GenerationPluginBase, procedure: Gimp.Procedure, image: Gimp.Image | None, *,
+    action: str = "present", mode: str = "current",
+) -> Gimp.ProcedureReturn:
+    pdb = Gimp.get_pdb()
+    if pdb.procedure_exists(PANEL_COMMAND):
+        command = pdb.lookup_procedure(PANEL_COMMAND)
+        arguments = command.create_config()
+        arguments.set_property("action", action)
+        arguments.set_property("image", image)
+        arguments.set_property("mode", mode)
+        return command.run(arguments)
+    GimpUi.init(PANEL_PROCEDURE)
+    session = PanelSession(plugin, procedure, image, action=action, mode=mode)
+    temporary = Gimp.Procedure.new(
+        procedure.get_plug_in(), PANEL_COMMAND, Gimp.PDBProcType.TEMPORARY, session.command, None,
+    )
+    temporary.add_choice_argument(
+        "action", "Action", "Action", make_choice_from_list(["present", "set-target", "generate", "close"]),
+        "present", GObject.ParamFlags.READWRITE,
+    )
+    temporary.add_image_argument("image", "Image", "Image", True, GObject.ParamFlags.READWRITE)
+    temporary.add_choice_argument(
+        "mode", _("Generation mode"), _("Generation mode"),
+        make_choice_from_list(["current", *GENERATION_MODES]), "current", GObject.ParamFlags.READWRITE,
+    )
+    plug_in = procedure.get_plug_in()
+    plug_in.add_temp_procedure(temporary)
+    plug_in.persistent_enable()
+    session.start()
+    Gtk.main()
+    plug_in.remove_temp_procedure(PANEL_COMMAND)
+    return procedure.new_return_values(
+        Gimp.PDBStatusType.EXECUTION_ERROR if session.failed else Gimp.PDBStatusType.SUCCESS, GLib.Error(),
+    )
 
 
 class PanelPlugin(GenerationPluginBase):
@@ -35,6 +73,7 @@ class PanelPlugin(GenerationPluginBase):
     description = _("Open the persistent GimpFusion generation window")
     sensitivity_mask = Gimp.ProcedureSensitivityMask.ALWAYS
     initial_mode = "txt2img"
+    initial_action = "present"
 
     def add_arguments(self, procedure: Gimp.Procedure) -> None:
         """ImageProcedure supplies the run mode, image and drawables."""
@@ -43,38 +82,26 @@ class PanelPlugin(GenerationPluginBase):
         self, procedure: Gimp.Procedure, run_mode: Gimp.RunMode, image: Gimp.Image | None,
         drawables: list[Gimp.Drawable], config: Gimp.ProcedureConfig, data: Any,
     ) -> Gimp.ProcedureReturn:
-        pdb = Gimp.get_pdb()
-        if pdb.procedure_exists(PANEL_COMMAND):
-            command = pdb.lookup_procedure(PANEL_COMMAND)
-            arguments = command.create_config()
-            arguments.set_property("action", "present")
-            arguments.set_property("image", image)
-            return command.run(arguments)
-        GimpUi.init(PANEL_PROCEDURE)
-        session = PanelSession(self, procedure, image)
-        temporary = Gimp.Procedure.new(
-            procedure.get_plug_in(), PANEL_COMMAND, Gimp.PDBProcType.TEMPORARY, session.command, None,
-        )
-        temporary.add_choice_argument(
-            "action", "Action", "Action", make_choice_from_list(["present", "set-target", "generate", "close"]),
-            "present", GObject.ParamFlags.READWRITE,
-        )
-        temporary.add_image_argument("image", "Image", "Image", True, GObject.ParamFlags.READWRITE)
-        procedure.get_plug_in().add_temp_procedure(temporary)
-        procedure.get_plug_in().persistent_enable()
-        session.start()
-        Gtk.main()
-        procedure.get_plug_in().remove_temp_procedure(PANEL_COMMAND)
-        return procedure.new_return_values(
-            Gimp.PDBStatusType.EXECUTION_ERROR if session.failed else Gimp.PDBStatusType.SUCCESS, GLib.Error(),
-        )
+        return run_panel(self, procedure, image, action=self.initial_action)
+
+
+class GenerateCurrentPlugin(PanelPlugin):
+    menu_label = _("Generate with current parameters")
+    description = _("Generate on the current image using the panel mode and parameters")
+    sensitivity_mask = GenerationPluginBase.sensitivity_mask
+    initial_action = "generate"
 
 
 class PanelSession:
-    def __init__(self, plugin: PanelPlugin, procedure: Gimp.Procedure, image: Gimp.Image | None) -> None:
+    def __init__(
+        self, plugin: GenerationPluginBase, procedure: Gimp.Procedure, image: Gimp.Image | None, *,
+        action: str = "present", mode: str = "current",
+    ) -> None:
         self.plugin = plugin
         self.procedure = procedure
         self.image = image
+        self.requested_mode = mode
+        self.pending_generate = action == "generate"
         self.editor: GenerationDialog | None = None
         self.task: GenerationRequest | None = None
         self.progress_future: Future[Any] | None = None
@@ -136,6 +163,9 @@ class PanelSession:
             return
         try:
             self.create_editor(options, catalog)
+            if self.pending_generate:
+                self.pending_generate = False
+                self.generate()
         except (ValueError, OSError, GLib.Error) as error:
             self.failed = True
             Gimp.message(str(error))
@@ -154,6 +184,8 @@ class PanelSession:
             self.plugin.validate_parameters(parameters, saved)
             for name in GENERATION_PARAMETERS:
                 configuration.set_property(name, saved[name])
+        if self.requested_mode != "current":
+            configuration.set_property("generation_mode", self.requested_mode)
         self.editor = editor = GenerationDialog(
             self.plugin, parameters, configuration, self.image, catalog,
             refresh_on_focus=False,
@@ -243,22 +275,33 @@ class PanelSession:
             self.refresh_targets()
 
     def command(self, procedure: Gimp.Procedure, config: Gimp.ProcedureConfig, _data: Any) -> Gimp.ProcedureReturn:
-        action, image = config.get_property("action"), config.get_property("image")
-        if image is not None or action == "set-target":
-            self.set_target(image)
+        action = config.get_property("action")
         if action == "close":
             self.close()
         elif self.closing:
             return procedure.new_return_values(Gimp.PDBStatusType.CANCEL, GLib.Error(message=_("Closing panel")))
-        elif action == "generate":
-            if not self.generate():
+        elif action == "generate" and (self.task is not None or self.pending_generate):
+            return procedure.new_return_values(
+                Gimp.PDBStatusType.CANCEL, GLib.Error(message=_("Generation is busy or needs input")),
+            )
+        else:
+            image, mode = config.get_property("image"), config.get_property("mode")
+            if image is not None or action == "set-target":
+                self.set_target(image)
+            if mode != "current":
+                self.requested_mode = mode
+                if self.editor is not None:
+                    self.editor.config.set_property("generation_mode", mode)
+            if action == "generate" and self.editor is None:
+                self.pending_generate = True
+            elif action == "generate" and not self.generate():
                 return procedure.new_return_values(
                     Gimp.PDBStatusType.CANCEL, GLib.Error(message=_("Generation is busy or needs input")),
                 )
-        else:
-            if self.editor is not None:
-                self.refresh_targets()
-            self.window.present()
+            elif action != "generate":
+                if self.editor is not None and image is None and action != "set-target":
+                    self.refresh_targets()
+                self.window.present()
         return procedure.new_return_values(Gimp.PDBStatusType.SUCCESS, GLib.Error())
 
     def generate(self, *_args: Any) -> bool:

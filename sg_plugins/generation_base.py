@@ -155,30 +155,13 @@ class GenerationPluginBase(PluginBase):
         self, procedure: Gimp.Procedure, run_mode: Gimp.RunMode, image: Gimp.Image,
         drawables: list[Gimp.Drawable], config: Gimp.ProcedureConfig, data: Any,
     ) -> Gimp.ProcedureReturn:
+        if run_mode == Gimp.RunMode.INTERACTIVE:
+            from sg_plugins.panel import run_panel
+
+            return run_panel(self, procedure, image, mode=self.initial_mode)
         try:
-            source = None
-            if run_mode == Gimp.RunMode.INTERACTIVE:
-                config.set_property("generation_mode", self.initial_mode)
-                GimpUi.init(procedure.get_name())
-                catalog = LoraCatalog(
-                    self.api.get("/sdapi/v1/loras"), self.settings.get("lora_preferred_name"),
-                    self.settings.get("extra_networks_default_multiplier"),
-                    self.settings.get("extra_networks_add_text_separator"),
-                )
-                editor = GenerationDialog(self, procedure, config, image, catalog)
-                while editor.dialog.run():
-                    editor.refresh_source()
-                    if editor.ready:
-                        break
-                else:
-                    editor.dialog.destroy()
-                    return procedure.new_return_values(Gimp.PDBStatusType.CANCEL, GLib.Error())
-                source = editor.source
-                values = editor.collect_values()
-                editor.dialog.destroy()
-            else:
-                values = self.collect_values(config)
-            self.generate(image, config, values, source)
+            values = self.collect_values(config)
+            self.generate(image, config, values)
             return procedure.new_return_values(Gimp.PDBStatusType.SUCCESS, GLib.Error())
         except (requests.RequestException, ValueError, OSError) as error:
             Gimp.message(str(error))

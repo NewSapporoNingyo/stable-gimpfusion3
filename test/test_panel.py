@@ -13,8 +13,11 @@ from unittest.mock import MagicMock, patch
 
 import gi
 
-from sg_plugins.generation_base import GenerationDialog, GenerationRequest
-from sg_plugins.panel import PanelSession
+from sg_plugins.generation_base import GenerationDialog, GenerationPluginBase, GenerationRequest
+from sg_plugins.img2img import Image2imagePlugin
+from sg_plugins.inpainting import InpaintingPlugin
+from sg_plugins.panel import PANEL_COMMAND, GenerateCurrentPlugin, PanelSession
+from sg_plugins.txt2img import Txt2imagePlugin
 from sg_sources import GenerationSource
 from sg_structures import ApiClient, MyShelf
 
@@ -30,6 +33,128 @@ class PanelTests(unittest.TestCase):
                           "cn_skip_annotator_layers": True, "insert_mode": "Resize to selection"},
             source, {"prompt": "snapshot"}, MagicMock(spec=ApiClient, base_url="http://example.test"),
         )
+
+    def test_interactive_entries_forward_image_action_and_mode_to_existing_panel(self) -> None:
+        for plugin_class, action, mode in (
+            (Txt2imagePlugin, "present", "txt2img"),
+            (Image2imagePlugin, "present", "img2img"),
+            (InpaintingPlugin, "present", "inpaint"),
+            (GenerateCurrentPlugin, "generate", "current"),
+        ):
+            with self.subTest(plugin=plugin_class.__name__), patch("sg_plugins.panel.Gimp.get_pdb") as get_pdb:
+                plugin = plugin_class(MagicMock(), MagicMock())
+                procedure, image = MagicMock(), MagicMock()
+                command = get_pdb.return_value.lookup_procedure.return_value
+                result = plugin.main(procedure, Gimp.RunMode.INTERACTIVE, image, [], MagicMock(), None)
+                assert result is command.run.return_value
+                get_pdb.return_value.procedure_exists.assert_called_once_with(PANEL_COMMAND)
+                arguments = command.create_config.return_value
+                assert arguments.set_property.call_args_list == [
+                    (("action", action),), (("image", image),), (("mode", mode),),
+                ]
+
+    def test_first_shortcut_starts_one_persistent_session(self) -> None:
+        plugin = GenerateCurrentPlugin(MagicMock(), MagicMock())
+        procedure, image = MagicMock(), MagicMock()
+        with (
+            patch("sg_plugins.panel.Gimp.get_pdb") as get_pdb,
+            patch("sg_plugins.panel.GimpUi.init"),
+            patch("sg_plugins.panel.Gimp.Procedure.new") as temporary,
+            patch("sg_plugins.panel.PanelSession") as session_class,
+            patch("sg_plugins.panel.Gtk.main") as main,
+        ):
+            get_pdb.return_value.procedure_exists.return_value = False
+            session_class.return_value.failed = False
+            plugin.main(procedure, Gimp.RunMode.INTERACTIVE, image, [], MagicMock(), None)
+        session_class.assert_called_once_with(plugin, procedure, image, action="generate", mode="current")
+        procedure.get_plug_in.return_value.add_temp_procedure.assert_called_once_with(temporary.return_value)
+        procedure.get_plug_in.return_value.persistent_enable.assert_called_once()
+        session_class.return_value.start.assert_called_once()
+        main.assert_called_once()
+        procedure.get_plug_in.return_value.remove_temp_procedure.assert_called_once_with(PANEL_COMMAND)
+
+    def test_script_run_modes_keep_using_supplied_parameters(self) -> None:
+        plugin = Txt2imagePlugin(MagicMock(), MagicMock())
+        for mode in (Gimp.RunMode.NONINTERACTIVE, Gimp.RunMode.WITH_LAST_VALS):
+            with (
+                self.subTest(mode=mode),
+                patch.object(plugin, "collect_values", return_value={"prompt": "script"}),
+                patch.object(plugin, "generate") as generate,
+                patch("sg_plugins.panel.run_panel") as panel,
+                patch("sg_plugins.generation_base.Gimp.progress_end"),
+            ):
+                procedure, image, config = MagicMock(), MagicMock(), MagicMock()
+                plugin.main(procedure, mode, image, [], config, None)
+                generate.assert_called_once_with(image, config, {"prompt": "script"})
+                panel.assert_not_called()
+
+    def test_startup_accepts_one_generate_then_runs_after_editor_restoration(self) -> None:
+        session = PanelSession.__new__(PanelSession)
+        session.closing = session.pending_generate = False
+        session.editor = session.task = None
+        session.image = None
+        procedure, config, image = MagicMock(), MagicMock(), MagicMock()
+        config.get_property.side_effect = {"action": "generate", "image": image, "mode": "current"}.__getitem__
+        session.command(procedure, config, None)
+        assert session.pending_generate
+        assert session.image is image
+        session.command(procedure, config, None)
+        assert procedure.new_return_values.call_args.args[0] == Gimp.PDBStatusType.CANCEL
+
+        restored = MagicMock(spec=GenerationDialog)
+
+        def restore(_options, _catalog):
+            session.editor = restored
+
+        def generate():
+            assert session.editor is restored
+            assert not session.pending_generate
+            return True
+
+        future: Future[tuple] = Future()
+        future.set_result(({}, MagicMock()))
+        with (
+            patch.object(session, "create_editor", side_effect=restore),
+            patch.object(session, "generate", side_effect=generate) as run,
+        ):
+            session.connected(future)
+        run.assert_called_once()
+
+    def test_mode_menu_updates_target_and_mode_without_generating(self) -> None:
+        session = PanelSession.__new__(PanelSession)
+        session.closing = session.pending_generate = False
+        session.task = None
+        session.editor = MagicMock()
+        session.window = MagicMock()
+        procedure, config, image = MagicMock(), MagicMock(), MagicMock()
+        config.get_property.side_effect = {"action": "present", "image": image, "mode": "inpaint"}.__getitem__
+        with patch.object(session, "set_target") as target, patch.object(session, "generate") as generate:
+            session.command(procedure, config, None)
+        target.assert_called_once_with(image)
+        session.editor.config.set_property.assert_called_once_with("generation_mode", "inpaint")
+        session.window.present.assert_called_once()
+        generate.assert_not_called()
+
+    def test_generate_refreshes_canvas_before_collecting_current_parameters(self) -> None:
+        session = PanelSession.__new__(PanelSession)
+        session.closing = False
+        session.task = None
+        session.plugin = MagicMock(spec=GenerationPluginBase)
+        session.plugin.settings = MagicMock()
+        session.editor = editor = MagicMock()
+        session.progress, session.status = MagicMock(), MagicMock()
+        image, source, values = MagicMock(), MagicMock(), {"prompt": "edited", "seed": 77}
+
+        def refresh():
+            editor.image, editor.source = image, source
+
+        editor.refresh_source.side_effect = refresh
+        editor.collect_values.return_value = values
+        with patch.object(session, "submit") as submit, patch("sg_plugins.panel.GLib.timeout_add_seconds"):
+            assert session.generate()
+        session.plugin.prepare_request.assert_called_once_with(image, editor.config, values, source)
+        request = session.plugin.prepare_request.return_value
+        submit.assert_called_once_with(request.run, session.generated, session.stop)
 
     def test_close_during_model_change_stops_generation_submission(self) -> None:
         request = self.request()
@@ -164,6 +289,7 @@ class PanelTests(unittest.TestCase):
     def test_temporary_generate_command_reports_busy(self) -> None:
         session = PanelSession.__new__(PanelSession)
         session.closing = False
+        session.pending_generate = False
         session.editor = MagicMock(spec=GenerationDialog)
         session.task = self.request()
         procedure, config = MagicMock(), MagicMock()

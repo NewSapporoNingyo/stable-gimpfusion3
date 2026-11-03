@@ -380,6 +380,14 @@ msgstr "Сведения о LoRA"
 msgid "Open generation panel"
 msgstr "Открыть панель генерации"
 
+#: sg_plugins/panel.py
+msgid "Generate with current parameters"
+msgstr "Генерировать с текущими параметрами"
+
+#: sg_plugins/panel.py
+msgid "Generate on the current image using the panel mode and parameters"
+msgstr "Генерировать в текущем изображении с режимом и параметрами панели"
+
 #: sg_plugins/panel.py:35
 msgid "Open the persistent GimpFusion generation window"
 msgstr "Открыть постоянное окно генерации GimpFusion"

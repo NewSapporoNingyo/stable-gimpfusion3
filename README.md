@@ -48,6 +48,19 @@ LoRA 区域可按名称或 alias 搜索模型，通过 `Add LoRA` 添加多个�
 
 详细参数规则与验收结果见 [S2 命名预设](doc/s2-presets.md)。
 
+## 快捷键生成（GIMP 3.2）
+
+从 `GimpFusion` 的文生图、图生图或局部重绘菜单打开同一个常驻面板。
+菜单更新目标图像并切换到对应模式，面板中的生成按钮使用当前参数生成。
+
+1. 打开“编辑 → 键盘快捷键”，搜索 `stable-gimpfusion-generate-current` 或 `Generate with current parameters`。
+2. 选中命令的快捷键列，按 `Ctrl+Alt+G`，点击“保存”。
+3. 在面板中填写提示词和生成参数，回到 GIMP 画布绘画。
+4. 按 `Ctrl+Alt+G`，使用当前图像、来源图层和面板参数生成，结果插入任务开始时的目标图像。
+
+面板关闭时，快捷键会打开面板、恢复上次参数并生成。任务运行期间，面板保持单任务状态。
+命令、参数与验收记录见 [S7 快捷键生成](doc/s7-shortcuts.md)。
+
 ## Translation
 
 By default, GIMP plug-ins look up gettext compiled message catalogs in the subdirectory locale/

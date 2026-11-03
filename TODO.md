@@ -90,6 +90,8 @@
 
 详见 [开发计划 S7](doc/devplan.md#s7)。
 
+使用与验收记录见 [S7 快捷键生成](doc/s7-shortcuts.md)。
+
 - [ ] 注册 `stable-gimpfusion-generate-current`，将当前图像与生成操作交给常驻面板。
 - [ ] 将三种模式的菜单入口接入面板，完成首次启动与已有窗口的调用流程。
 - [ ] 在 GIMP 中绑定快捷键，验收画布编辑后按面板当前参数生成。

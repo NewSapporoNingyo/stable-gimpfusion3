@@ -13,6 +13,7 @@
 菜单过程为 `stable-gimpfusion-panel`，类型为 `PLUGIN` 的 `ImageProcedure`。
 GIMP 将当前图像传给菜单过程；插件通过 `persistent_enable()` 接收临时 PDB 调用，并在窗口存续期间运行 GTK 主循环。
 临时过程 `stable-gimpfusion-panel-command` 接受 `present`、`set-target`、`generate`、`close`，以及对应的 `image` 参数。
+S7 增加的 `mode` 参数用于保持当前模式或切换到指定模式，调用规则见 [S7 快捷键生成](s7-shortcuts.md)。
 重复打开菜单会呈现现有窗口。任务运行时，临时生成调用返回 `CANCEL`。
 
 ## 输入与任务

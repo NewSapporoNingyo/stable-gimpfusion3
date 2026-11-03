@@ -378,6 +378,14 @@ msgstr ""
 msgid "Open generation panel"
 msgstr ""
 
+#: sg_plugins/panel.py
+msgid "Generate with current parameters"
+msgstr ""
+
+#: sg_plugins/panel.py
+msgid "Generate on the current image using the panel mode and parameters"
+msgstr ""
+
 #: sg_plugins/panel.py:35
 msgid "Open the persistent GimpFusion generation window"
 msgstr ""

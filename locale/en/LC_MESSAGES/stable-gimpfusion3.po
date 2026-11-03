@@ -386,6 +386,14 @@ msgstr "Open generation panel"
 msgid "Open the persistent GimpFusion generation window"
 msgstr "Open the persistent GimpFusion generation window"
 
+#: sg_plugins/panel.py
+msgid "Generate with current parameters"
+msgstr "Generate with current parameters"
+
+#: sg_plugins/panel.py
+msgid "Generate on the current image using the panel mode and parameters"
+msgstr "Generate on the current image using the panel mode and parameters"
+
 #: sg_plugins/panel.py:95
 msgid "Connecting to Forge"
 msgstr "Connecting to Forge"

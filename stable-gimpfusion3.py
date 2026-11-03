@@ -15,7 +15,7 @@ from sg_plugins.config_controlnet import ConfigControlnetLayerPlugin
 from sg_plugins.img2img import Image2imagePlugin
 from sg_plugins.inpainting import InpaintingPlugin
 from sg_plugins.layerinfo import LayerInfoPlugin
-from sg_plugins.panel import PANEL_PROCEDURE, PanelPlugin
+from sg_plugins.panel import GENERATE_CURRENT_PROCEDURE, PANEL_PROCEDURE, GenerateCurrentPlugin, PanelPlugin
 from sg_plugins.txt2img import Txt2imagePlugin
 
 gi.require_version("Gimp", "3.0")
@@ -46,6 +46,7 @@ MODULES: dict[str, PluginBase] = {
     "stable-gimpfusion-config-controlnet-layer": ConfigControlnetLayerPlugin(api=api, settings=settings),
     "stable-gimpfusion-layer-info": LayerInfoPlugin(api=api, settings=settings),
     PANEL_PROCEDURE: PanelPlugin(api=api, settings=settings),
+    GENERATE_CURRENT_PROCEDURE: GenerateCurrentPlugin(api=api, settings=settings),
 }
 
 
@@ -62,7 +63,7 @@ class GimpfusionPlugin(Gimp.PlugIn):
 
     def do_create_procedure(self, name: str) -> Gimp.Procedure:
         module = MODULES[name]
-        if name != PANEL_PROCEDURE and not self.options_loaded:
+        if name not in (PANEL_PROCEDURE, GENERATE_CURRENT_PROCEDURE) and not self.options_loaded:
             try:
                 settings.save(fetch_stablediffusion_options(api))
             except (requests.ConnectionError, requests.Timeout) as error:
