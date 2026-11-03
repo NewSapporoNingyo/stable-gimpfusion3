@@ -94,7 +94,7 @@ git -C "C:\Users\LHR\AppData\Roaming\GIMP\3.2\plug-ins\stable-gimpfusion3" pull 
 - 交付时说明改动内容、检查命令和结果，以及 GIMP 内的验证情况。
 - 当在codex中需要使用computer use（电脑操控）时，注意本设备上的computer use的窗口截图功能存在问题，必要时需使用全屏截图。
 - 每次开发任务结束后注意终止webui forge实例，避免其留存在agent内置终端中持续占用系统资源。
-
+- 确保插件内界面操作与代码实现接近webui forge中的逻辑，不得自行编造与webui不同或矛盾的新操作逻辑。本机webui在`C:\data\webui_forge_dev\stable-diffusion-webui-forge`目录下。
 ## 提交信息
 
 修改代码后，提供英文提交信息，格式为 `Change Type: What was done`。类型可使用 `Fix`、`Feat`、`Refactor`、`Docs`、`Test` 或 `Chore`，冒号后直接说明完成的改动。
