@@ -24,7 +24,9 @@ from sg_generation import (
 )
 from sg_gtk_utils import add_textarea_to_container
 from sg_i18n import _
+from sg_loras import LoraCatalog, validate_loras
 from sg_plugins import PluginBase
+from sg_plugins.lora_selector import LoraSelector
 from sg_proc_arguments import (
     PLUGIN_FIELDS_COMMON,
     PLUGIN_FIELDS_CONTROLNET,
@@ -96,15 +98,7 @@ class GenerationPluginBase(PluginBase):
             ):
                 raise ValueError(_("Unavailable preset option: {field} = {value}").format(field=name, value=value))
         integer_seed(preset["seed"])
-        if not isinstance(preset["loras"], list):
-            raise ValueError(_("Invalid preset field: {field}").format(field="loras"))
-        for lora in preset["loras"]:
-            if (
-                not isinstance(lora["name"], str) or not isinstance(lora["alias"], str)
-                or type(lora["enabled"]) is not bool or type(lora["weight"]) not in (int, float)
-                or not math.isfinite(lora["weight"])
-            ):
-                raise ValueError(_("Invalid preset field: {field}").format(field="loras"))
+        validate_loras(preset["loras"])
 
     def main(
         self, procedure: Gimp.Procedure, run_mode: Gimp.RunMode, image: Gimp.Image,
@@ -112,10 +106,12 @@ class GenerationPluginBase(PluginBase):
     ) -> Gimp.ProcedureReturn:
         try:
             source = None
+            validate_loras(json.loads(config.get_property("loras")))
+            catalog = LoraCatalog(self.api.get("/sdapi/v1/loras"), self.settings.get("lora_preferred_name"))
             if run_mode == Gimp.RunMode.INTERACTIVE:
                 config.set_property("generation_mode", self.initial_mode)
                 GimpUi.init(procedure.get_name())
-                editor = GenerationDialog(self, procedure, config, image)
+                editor = GenerationDialog(self, procedure, config, image, catalog)
                 while editor.dialog.run():
                     editor.refresh_source()
                     if editor.ready:
@@ -124,9 +120,10 @@ class GenerationPluginBase(PluginBase):
                     editor.dialog.destroy()
                     return procedure.new_return_values(Gimp.PDBStatusType.CANCEL, GLib.Error())
                 source = editor.source
+                catalog = editor.loras.catalog
                 editor.dialog.destroy()
             values = self.collect_values(config)
-            self.generate(image, config, values, source)
+            self.generate(image, config, values, catalog, source)
             return procedure.new_return_values(Gimp.PDBStatusType.SUCCESS, GLib.Error())
         except (requests.RequestException, ValueError, OSError) as error:
             Gimp.message(str(error))
@@ -136,6 +133,7 @@ class GenerationPluginBase(PluginBase):
 
     def generate(
         self, image: Gimp.Image, config: Gimp.ProcedureConfig, values: dict[str, Any],
+        lora_catalog: LoraCatalog,
         source: GenerationSource | None = None,
     ) -> None:
         mode = values["generation_mode"]
@@ -146,7 +144,9 @@ class GenerationPluginBase(PluginBase):
             raise ValueError(problem)
         x1, y1, x2, y2 = source.selection_bounds
         size = x2 - x1, y2 - y1
-        data = build_request(values, self.settings.get("prompt"), self.settings.get("negative_prompt"), size)
+        data = build_request(
+            values, self.settings.get("prompt"), self.settings.get("negative_prompt"), size, lora_catalog,
+        )
         cache_enabled = bool(self.settings.get("cache_tobase64", True))
         if mode != "txt2img":
             data["init_images"] = [cast(PixelSnapshot, source.pixels).to_base64(cache_enabled=cache_enabled)]
@@ -188,6 +188,7 @@ class GenerationPluginBase(PluginBase):
 class GenerationDialog:
     def __init__(
         self, plugin: GenerationPluginBase, procedure: Gimp.Procedure, config: Gimp.ProcedureConfig, image: Gimp.Image,
+        lora_catalog: LoraCatalog,
     ) -> None:
         self.plugin = plugin
         self.procedure = procedure
@@ -249,6 +250,11 @@ class GenerationDialog:
         body.add(source_frame)
         add_textarea_to_container(procedure, config, "prompt", body)
         add_textarea_to_container(procedure, config, "negative-prompt", body)
+        lora_frame = Gtk.Frame(label="LoRA")
+        self.loras = LoraSelector(plugin.api, config, lora_catalog, plugin.settings.get("prompt"), self.refresh_mode)
+        self.loras.set_border_width(8)
+        lora_frame.add(self.loras)
+        body.add(lora_frame)
         seed_widget = self.dialog.get_widget("seed", GimpUi.LabelSpin.__gtype__)
         seed_widget.get_spin_button().set_digits(0)
         seed_widget.get_spin_button().set_increments(1, 100)
@@ -352,11 +358,12 @@ class GenerationDialog:
             valid_dimensions = True
         self.dimension_label.set_text(_("Width and height must be multiples of 8"))
         self.dimension_label.set_visible(not valid_dimensions)
-        self.save_button.set_sensitive(bool(self.active_preset) and valid_dimensions)
-        self.save_as_button.set_sensitive(valid_dimensions)
+        valid_loras = not self.loras.invalid_weights
+        self.save_button.set_sensitive(bool(self.active_preset) and valid_dimensions and valid_loras)
+        self.save_as_button.set_sensitive(valid_dimensions and valid_loras)
         problem = self.source_error or self.source.problem(mode, self.config.get_property("invert_mask"))
         self.input_label.set_text(problem)
-        self.ready = (valid_dimensions or not use_dimensions) and not problem
+        self.ready = (valid_dimensions or not use_dimensions) and valid_loras and not problem
         self.dialog.set_response_sensitive(Gtk.ResponseType.OK, self.ready)
         if use_dimensions and not valid_dimensions:
             self.size_label.set_text("")

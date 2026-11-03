@@ -6,6 +6,7 @@ from typing import Any
 
 from sg_constants import INPAINT_FILL_MODES, RESIZE_MODES
 from sg_i18n import _
+from sg_loras import LoraCatalog, compose_prompt
 
 GENERATION_MODES = ("txt2img", "img2img", "inpaint")
 CONTROLNET_PARAMETERS = (
@@ -58,6 +59,7 @@ def insertion_size(
 
 def build_request(
     values: dict[str, Any], prompt_suffix: str, negative_suffix: str, selection_size: tuple[int, int],
+    lora_catalog: LoraCatalog,
 ) -> dict[str, Any]:
     width, height = generation_size(values, selection_size)
     validate_dimensions(width, height)
@@ -65,7 +67,7 @@ def build_request(
         "batch_size", "steps", "cfg_scale", "sampler_index", "restore_faces", "tiling",
     )}
     data.update({
-        "prompt": f"{values['prompt']} {prompt_suffix}".strip(),
+        "prompt": compose_prompt(values["prompt"], prompt_suffix, values["loras"], lora_catalog)[0],
         "negative_prompt": f"{values['negative_prompt']} {negative_suffix}".strip(),
         "seed": values["seed"], "width": width, "height": height,
     })

@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 
 from sg_generation import build_request, generation_size, insertion_size, integer_seed
+from sg_loras import LoraCatalog
 from sg_structures import MyShelf
 
 
@@ -19,11 +20,14 @@ class PresetTests(unittest.TestCase):
             assert shelf.get("presets") == {}
             preset = {"generation_mode": "txt2img", "seed": 0, "inpaint_full_res_padding": 32, "loras": [
                 {"name": "model", "alias": "tag", "weight": 0.75, "enabled": True},
+                {"name": "slider", "alias": "slider alias", "weight": -0.5, "enabled": False},
+                {"name": "zero", "alias": "zero", "weight": 0, "enabled": True},
             ]}
             shelf.save_preset("预设一", preset)
             shelf.save_preset("预设二", {**preset, "seed": 4294967295})
             reloaded = MyShelf(file_path=str(path))
             assert reloaded.get("presets")["预设一"] == preset
+            assert reloaded.get("presets")["预设二"]["loras"] == preset["loras"]
             assert reloaded.get("last_preset") == "预设二"
             assert reloaded.get("prompt") == "suffix"
             assert reloaded.get("api_base") == "http://example.test"
@@ -72,9 +76,11 @@ class PresetTests(unittest.TestCase):
             "restore_faces": False, "tiling": False, "denoising_strength": 0.6,
             "resize_mode": "Just Resize", "mask_blur": 4, "inpainting_fill": "original",
             "inpaint_full_res": True, "inpaint_full_res_padding": 32, "invert_mask": True,
+            "loras": [{"name": "slider", "alias": "slider", "weight": -0.5, "enabled": True}],
         }
-        text = build_request(values, "global suffix", "global negative", (384, 256))
-        assert text["prompt"] == "local prompt global suffix"
+        catalog = LoraCatalog([], "Alias from file")
+        text = build_request(values, "global suffix", "global negative", (384, 256), catalog)
+        assert text["prompt"] == "local prompt global suffix <lora:slider:-0.5>"
         assert text["negative_prompt"] == "local negative global negative"
         assert (text["width"], text["height"]) == (512, 512)
         assert text["seed"] == 0
@@ -83,31 +89,32 @@ class PresetTests(unittest.TestCase):
         for mode in ("txt2img", "img2img", "inpaint"):
             values.update(generation_mode=mode, width=1269, height=1660)
             with self.assertRaisesRegex(ValueError, "multiples of 8"):  # noqa: PT027
-                build_request(values, "", "", (383, 259))
+                build_request(values, "", "", (383, 259), catalog)
             values.update(width=1272, height=1664)
-            corrected = build_request(values, "", "", (383, 259))
+            corrected = build_request(values, "", "", (383, 259), catalog)
             assert (corrected["width"], corrected["height"]) == (1272, 1664)
+            assert corrected["prompt"] == "local prompt <lora:slider:-0.5>"
         values.update(generation_mode="txt2img", width=513, height=516)
         values["insert_mode"] = "Use selection size"
         assert generation_size(values, (383, 259)) == (384, 256)
-        selection = build_request(values, "", "", (383, 259))
+        selection = build_request(values, "", "", (383, 259), catalog)
         assert (selection["width"], selection["height"]) == (384, 256)
         values.update(width=512, height=384)
         values["generation_mode"] = "img2img"
-        image = build_request(values, "", "", (383, 259))
+        image = build_request(values, "", "", (383, 259), catalog)
         assert (image["width"], image["height"]) == (512, 384)
         assert insertion_size(values, (383, 259), (640, 512)) == (512, 384)
         assert image["denoising_strength"] == 0.6
         values.update(width=512, height=512)
         values["generation_mode"] = "inpaint"
-        inpaint = build_request(values, "", "", (384, 256))
+        inpaint = build_request(values, "", "", (384, 256), catalog)
         assert (inpaint["width"], inpaint["height"]) == (512, 512)
         assert inpaint["inpainting_fill"] == 1
         assert inpaint["inpainting_mask_invert"] == 1
         assert insertion_size(values, (384, 256), (768, 512)) == (768, 512)
         for padding in (0, 32, 128):
             values["inpaint_full_res_padding"] = padding
-            assert build_request(values, "", "", (384, 256))["inpaint_full_res_padding"] == padding
+            assert build_request(values, "", "", (384, 256), catalog)["inpaint_full_res_padding"] == padding
         values["inpaint_full_res"] = False
         assert insertion_size(values, (384, 256), (768, 512)) == (512, 512)
         values["generation_mode"] = "txt2img"

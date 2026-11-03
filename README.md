@@ -40,7 +40,11 @@ Tested on Ubuntu 24.04 with PPA GIMP 3.0.6 (no sandboxed environments like AppIm
 
 预设保存两组 ControlNet 参数。每次使用时选择当前图像中的输入图层；展开参数区可编辑处理器、模型、权重等选项。
 `Read layer settings` 将所选图层保存的 ControlNet 参数读入窗口。切换输入图层保留窗口中的参数。
-LoRA 通过提示词中的 `<lora:标识:权重>` 标签使用。
+LoRA 区域可按名称或 alias 搜索模型，通过 `Add LoRA` 添加多个条目，编辑权重、启用开关及移除条目。
+`Refresh LoRAs` 重新扫描 Forge 的 LoRA 目录。展开 `LoRA details` 可查看路径和 metadata。
+权重默认 `1`，支持负数和 `0`。`Final LoRA tags` 显示实际用于请求的标签。
+启用的选择器条目提供同一模型的最终权重，提示词输入框保存用户原文。命名预设保存完整 LoRA 配置。
+标签合成规则和验收结果见 [S4 LoRA 选择器](doc/s4-loras.md)。
 
 详细参数规则与验收结果见 [S2 命名预设](doc/s2-presets.md)。
 
