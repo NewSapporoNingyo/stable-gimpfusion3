@@ -297,7 +297,7 @@ latent noise: Fills the masked area with Seed-based noise. It can be used to mas
 latent nothing: Fills the masked area with the average color of the masked area. It can be used to mask an object and rewrite the background. 0.8 or higher is recommended for CGF.
         """),  # noqa: E501
         make_choice_from_list(inpaint_fill_modes),
-        inpaint_fill_modes[0],
+        "original",
         GObject.ParamFlags.READWRITE,
     )
 

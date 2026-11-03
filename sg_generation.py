@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import configparser
+import io
+import json
+
+from collections.abc import Callable
 from typing import Any
 
 from sg_constants import INPAINT_FILL_MODES, RESIZE_MODES
 from sg_i18n import _
-from sg_loras import LoraCatalog, compose_prompt
 
 GENERATION_MODES = ("txt2img", "img2img", "inpaint")
 CONTROLNET_PARAMETERS = (
@@ -21,6 +25,45 @@ GENERATION_PARAMETERS = (
     "cn1_enabled", "cn2_enabled", "cn_skip_annotator_layers",
     *(f"cn{slot}_{name}" for slot in (1, 2) for name in CONTROLNET_PARAMETERS),
 )
+MODE_PARAMETERS = {
+    "txt2img": ("insert_mode",),
+    "img2img": ("denoising_strength", "resize_mode", "mask_blur"),
+    "inpaint": (
+        "denoising_strength", "resize_mode", "mask_blur", "inpainting_fill", "inpaint_full_res",
+        "inpaint_full_res_padding", "invert_mask",
+    ),
+}
+MODE_SPECIFIC_PARAMETERS = frozenset(name for names in MODE_PARAMETERS.values() for name in names)
+COMMON_PARAMETERS = tuple(
+    name for name in GENERATION_PARAMETERS if name != "generation_mode" and name not in MODE_SPECIFIC_PARAMETERS
+)
+GENERATION_PARASITE = "stable-gimpfusion-generation"
+
+
+def serialize_generation(values: dict[str, Any]) -> str:
+    parser = configparser.ConfigParser(interpolation=None)
+    parser["generation"] = {
+        name: (
+            json.dumps(values[name], ensure_ascii=False) if name in ("prompt", "negative_prompt") else str(values[name])
+        )
+        for name in GENERATION_PARAMETERS
+    }
+    output = io.StringIO()
+    parser.write(output)
+    return output.getvalue()
+
+
+def parse_generation(text: str, defaults: dict[str, Any]) -> dict[str, Any]:
+    parser = configparser.ConfigParser(interpolation=None)
+    parser.read_string(text)
+    section = parser["generation"]
+    converters: dict[type, Callable[[str], Any]] = {
+        bool: section.getboolean, int: section.getint, float: section.getfloat, str: section.__getitem__,
+    }
+    values = {name: converters[type(defaults[name])](name) for name in GENERATION_PARAMETERS}
+    for name in ("prompt", "negative_prompt"):
+        values[name] = json.loads(values[name])
+    return values
 
 
 def integer_seed(value: float | int) -> int:
@@ -63,7 +106,6 @@ def insertion_size(
 
 def build_request(
     values: dict[str, Any], prompt_suffix: str, negative_suffix: str, selection_size: tuple[int, int],
-    lora_catalog: LoraCatalog,
 ) -> dict[str, Any]:
     width, height = generation_size(values, selection_size)
     validate_dimensions(width, height)
@@ -71,7 +113,7 @@ def build_request(
         "batch_size", "steps", "cfg_scale", "sampler_index", "restore_faces", "tiling",
     )}
     data.update({
-        "prompt": compose_prompt(values["prompt"], prompt_suffix, values["loras"], lora_catalog)[0],
+        "prompt": f"{values['prompt']} {prompt_suffix}".strip(),
         "negative_prompt": f"{values['negative_prompt']} {negative_suffix}".strip(),
         "seed": values["seed"], "width": width, "height": height,
     })

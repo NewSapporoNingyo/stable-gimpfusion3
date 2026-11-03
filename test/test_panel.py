@@ -171,17 +171,15 @@ class PanelTests(unittest.TestCase):
         session.command(procedure, config, None)
         assert procedure.new_return_values.call_args.args[0] == Gimp.PDBStatusType.CANCEL
 
-    def test_panel_and_preset_writes_keep_other_windows_settings(self) -> None:
+    def test_panel_writes_keep_other_windows_settings(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = str(Path(directory) / "settings.json")
             panel = MyShelf({"prompt": "old"}, file_path=path)
             panel.save()
             global_settings = MyShelf(file_path=path)
             global_settings.save({"prompt": "new"})
-            panel.save_preset("saved", {"generation_mode": "txt2img", "inpaint_full_res_padding": 32})
-            state = {"parameters": {"seed": 123, "loras": []}, "width": 360, "height": 600}
+            state = {"parameters": {"seed": 123}, "file_path": "settings.txt", "width": 360, "height": 600}
             panel.save({"panel_state": state})
             restored = MyShelf(file_path=path)
             assert restored.get("prompt") == "new"
             assert restored.get("panel_state") == state
-            assert "saved" in restored.get("presets")

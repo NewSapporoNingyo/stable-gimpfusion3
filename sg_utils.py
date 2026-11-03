@@ -35,10 +35,13 @@ def fetch_stablediffusion_options(api: ApiClient) -> dict[str, Any]:
     samplers = [sampler["name"] for sampler in api.get("/sdapi/v1/samplers")]
     sd_modules = [x["filename"] for x in api.get("/sdapi/v1/sd-modules")]
     gradio_config = api.get("/config")
-    lora_preferred_name = next(
-        component["props"]["value"] for component in gradio_config["components"]
-        if component["props"].get("elem_id") == "setting_lora_preferred_name"
-    )
+    lora_options = {
+        name: next(
+            component["props"]["value"] for component in gradio_config["components"]
+            if component["props"].get("elem_id") == "setting_" + name
+        )
+        for name in ("lora_preferred_name", "extra_networks_default_multiplier", "extra_networks_add_text_separator")
+    }
 
     return {
         "models": models,
@@ -47,7 +50,7 @@ def fetch_stablediffusion_options(api: ApiClient) -> dict[str, Any]:
         "cn_modules": cn_modules,
         "samplers": samplers,
         "sd_model_checkpoint": sd_model_checkpoint,
-        "lora_preferred_name": lora_preferred_name,
+        **lora_options,
         "is_server_running": True,
         "has_sd_modules_support": True,
     }

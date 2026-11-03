@@ -4,7 +4,7 @@ import gi
 
 gi.require_version("GimpUi", "3.0")
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gimp, GimpUi, Gtk
+from gi.repository import Gimp, GimpUi, Gtk, Pango
 
 from sg_i18n import _
 
@@ -24,7 +24,9 @@ def add_textarea_to_container(
 
     scrolled_window = Gtk.ScrolledWindow()
     scrolled_window.add(prompt_w)
-    scrolled_window.set_min_content_height(75)
+    metrics = prompt_w.get_pango_context().get_metrics()
+    line_height = (metrics.get_ascent() + metrics.get_descent() + Pango.SCALE - 1) // Pango.SCALE
+    scrolled_window.set_min_content_height(8 * line_height)
 
     container.add(scrolled_window)
     scrolled_window.show_all()

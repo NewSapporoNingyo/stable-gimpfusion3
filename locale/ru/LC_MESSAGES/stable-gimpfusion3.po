@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: stable-gimpfusion3 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-03 19:20+0900\n"
+"POT-Creation-Date: 2026-11-03 22:08+0900\n"
 "PO-Revision-Date: 2025-12-15 11:12+0300\n"
 "Last-Translator: shsmad <shsmad@gmail.com>\n"
 "Language-Team: Russian <gnu@d07.ru>\n"
@@ -18,23 +18,13 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
 "n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: sg_generation.py:28
+#: sg_generation.py:71
 msgid "Seed must be an integer from -1 to 4294967295"
 msgstr "Seed ?????? ???? ????? ?????? ?? -1 ?? 4294967295"
 
-#: sg_generation.py:34 sg_plugins/generation_base.py:444
+#: sg_generation.py:77 sg_plugins/generation_base.py:457
 msgid "Width and height must be positive multiples of 8"
 msgstr "Ширина и высота должны быть положительными числами, кратными 8"
-
-#: sg_loras.py:28 sg_plugins/generation_base.py:129
-#: sg_plugins/generation_base.py:133
-#, python-brace-format
-msgid "Invalid preset field: {field}"
-msgstr "???????????? ???? ???????: {field}"
-
-#: sg_loras.py:49 sg_loras.py:51
-msgid "Enter a finite LoRA weight"
-msgstr "Введите конечное значение веса LoRA"
 
 #: sg_sources.py:94
 msgid "Open the target image"
@@ -134,175 +124,209 @@ msgid ""
 "Convert current layer to ControlNet layer or edit ControlNet Layer's options"
 msgstr ""
 
-#: sg_plugins/generation_base.py:68
+#: sg_plugins/generation_base.py:76
 msgid "Target image closed; task finished"
 msgstr "Целевое изображение закрыто; задача завершена"
 
-#: sg_plugins/generation_base.py:96
+#: sg_plugins/generation_base.py:104
 msgid "Generation mode"
 msgstr "????? ?????????"
 
-#: sg_plugins/generation_base.py:101 sg_proc_arguments.py:15
+#: sg_plugins/generation_base.py:109 sg_proc_arguments.py:15
 #: sg_proc_arguments.py:314
 msgid "Model"
 msgstr ""
 
-#: sg_plugins/generation_base.py:101 sg_proc_arguments.py:16
+#: sg_plugins/generation_base.py:109 sg_proc_arguments.py:16
 msgid "Model to use for inference"
 msgstr ""
 
-#: sg_plugins/generation_base.py:138
+#: sg_plugins/generation_base.py:135 sg_plugins/generation_base.py:139
 #, python-brace-format
-msgid "Unavailable preset option: {field} = {value}"
-msgstr "??????????? ???????? ???????: {field} = {value}"
+msgid "Invalid generation field: {field}"
+msgstr "Недопустимое поле генерации: {field}"
 
-#: sg_plugins/generation_base.py:199 sg_plugins/generation_base.py:599
+#: sg_plugins/generation_base.py:144
+#, python-brace-format
+msgid "Unavailable generation option: {field} = {value}"
+msgstr "Недоступный параметр генерации: {field} = {value}"
+
+#: sg_plugins/generation_base.py:214 sg_plugins/generation_base.py:654
 msgid "Select a ControlNet input layer from the current image"
 msgstr "???????? ??????? ???? ControlNet ? ??????? ???????????"
 
-#: sg_plugins/generation_base.py:218 sg_plugins/panel.py:288
-#: sg_plugins/panel.py:289
+#: sg_plugins/generation_base.py:233 sg_plugins/panel.py:284
+#: sg_plugins/panel.py:285
 msgid "Generating image"
 msgstr "????????? ???????????"
 
-#: sg_plugins/generation_base.py:225 sg_plugins/panel.py:319
+#: sg_plugins/generation_base.py:240 sg_plugins/panel.py:315
 #, python-brace-format
 msgid "Progress: {progress}%, ETA: {eta}s"
 msgstr "Прогресс: {progress}%, осталось: {eta}с"
 
-#: sg_plugins/generation_base.py:231
+#: sg_plugins/generation_base.py:246
 msgid "Inserting layers from response"
 msgstr ""
 
-#: sg_plugins/generation_base.py:251 sg_plugins/panel.py:90
+#: sg_plugins/generation_base.py:268 sg_plugins/panel.py:89
 msgid "GimpFusion generation"
 msgstr "????????? GimpFusion"
 
-#: sg_plugins/generation_base.py:252 sg_plugins/panel.py:196
+#: sg_plugins/generation_base.py:269 sg_plugins/panel.py:194
 msgid "Generate"
 msgstr "???????"
 
-#: sg_plugins/generation_base.py:276 sg_plugins/generation_base.py:554
-msgid "Save preset"
-msgstr "????????? ??????"
+#: sg_plugins/generation_base.py:286
+msgid "Save file"
+msgstr "Сохранить файл"
 
-#: sg_plugins/generation_base.py:277 sg_plugins/generation_base.py:553
-msgid "Save preset as"
-msgstr "????????? ?????? ???"
+#: sg_plugins/generation_base.py:287
+msgid "Save file as"
+msgstr "Сохранить файл как"
 
-#: sg_plugins/generation_base.py:280
-msgid "Load preset"
-msgstr "????????? ??????"
+#: sg_plugins/generation_base.py:288
+msgid "Save to image"
+msgstr "Сохранить в изображение"
 
-#: sg_plugins/generation_base.py:283
-msgid "Delete preset"
-msgstr "??????? ??????"
+#: sg_plugins/generation_base.py:289
+msgid "Load from image"
+msgstr "Загрузить из изображения"
 
-#: sg_plugins/generation_base.py:307
-msgid "Preset actions"
-msgstr "Действия с пресетами"
+#: sg_plugins/generation_base.py:292
+msgid "Load file"
+msgstr "Загрузить файл"
 
-#: sg_plugins/generation_base.py:310
+#: sg_plugins/generation_base.py:323
+msgid "Generation settings"
+msgstr "Параметры генерации"
+
+#: sg_plugins/generation_base.py:326
 msgid "Input source"
 msgstr "????????"
 
-#: sg_plugins/generation_base.py:337
+#: sg_plugins/generation_base.py:353
 msgid "Generation parameters"
 msgstr "Параметры генерации"
 
-#: sg_plugins/generation_base.py:358 sg_proc_arguments.py:274
+#: sg_plugins/generation_base.py:374 sg_proc_arguments.py:274
 msgid "Inpaint area"
 msgstr "??????? ???????????"
 
-#: sg_plugins/generation_base.py:358
+#: sg_plugins/generation_base.py:374
 msgid "Only masked"
 msgstr "?????? ??????? ?????"
 
-#: sg_plugins/generation_base.py:358
+#: sg_plugins/generation_base.py:374
 msgid "Whole picture"
 msgstr "??? ???????????"
 
-#: sg_plugins/generation_base.py:368
+#: sg_plugins/generation_base.py:384
 #, python-brace-format
 msgid "ControlNet {slot} parameters"
 msgstr "????????? ControlNet {slot}"
 
-#: sg_plugins/generation_base.py:372
+#: sg_plugins/generation_base.py:388
 msgid "Read layer settings"
 msgstr "????????? ????????? ????"
 
-#: sg_plugins/generation_base.py:415
+#: sg_plugins/generation_base.py:424
 #, python-brace-format
-msgid "Current preset: {name}"
-msgstr "??????? ??????: {name}"
+msgid "File: {name}"
+msgstr "Файл: {name}"
 
-#: sg_plugins/generation_base.py:416
+#: sg_plugins/generation_base.py:426
+#, python-brace-format
+msgid "Settings from image: {name}"
+msgstr "Параметры из изображения: {name}"
+
+#: sg_plugins/generation_base.py:428
 msgid "Unsaved parameters"
 msgstr "????????????? ?????????"
 
-#: sg_plugins/generation_base.py:474
+#: sg_plugins/generation_base.py:489
 #, python-brace-format
 msgid ""
 "Request: {width} x {height}; insertion area: {area_width} x {area_height}"
 msgstr ""
 "??????: {width} x {height}; ??????? ???????: {area_width} x {area_height}"
 
-#: sg_plugins/generation_base.py:482
+#: sg_plugins/generation_base.py:502
 msgid "Select a target image"
 msgstr "Выберите целевое изображение"
 
-#: sg_plugins/generation_base.py:498
+#: sg_plugins/generation_base.py:518
 #, python-brace-format
 msgid "Target image: {name}"
 msgstr "??????? ???????????: {name}"
 
-#: sg_plugins/generation_base.py:500
+#: sg_plugins/generation_base.py:520
 #, python-brace-format
 msgid "Selection: ({x}, {y}), {width} x {height}"
 msgstr "?????????: ({x}, {y}), {width} x {height}"
 
-#: sg_plugins/generation_base.py:502
+#: sg_plugins/generation_base.py:522
 msgid "Selection: whole image"
 msgstr "?????????: ??? ???????????"
 
-#: sg_plugins/generation_base.py:506
+#: sg_plugins/generation_base.py:526
 #, python-brace-format
 msgid "Source layer: {name}"
 msgstr "???????? ????: {name}"
 
-#: sg_plugins/generation_base.py:507
+#: sg_plugins/generation_base.py:527
 #, python-brace-format
 msgid "Source: {width} x {height}; offset: ({x}, {y})"
 msgstr "????????: {width} x {height}; ????????: ({x}, {y})"
 
-#: sg_plugins/generation_base.py:515
+#: sg_plugins/generation_base.py:535
 msgid "Current selection"
 msgstr "??????? ?????????"
 
-#: sg_plugins/generation_base.py:515
+#: sg_plugins/generation_base.py:535
 msgid "Source layer mask"
 msgstr "????? ????????? ????"
 
-#: sg_plugins/generation_base.py:515
+#: sg_plugins/generation_base.py:535
 msgid "Create a mask"
 msgstr "???????? ?????"
 
-#: sg_plugins/generation_base.py:516
+#: sg_plugins/generation_base.py:536
 #, python-brace-format
 msgid "Mask source: {name}"
 msgstr "???????? ?????: {name}"
 
-#: sg_plugins/generation_base.py:554
+#: sg_plugins/generation_base.py:558
+msgid "Save generation settings"
+msgstr "Сохранить параметры генерации"
+
+#: sg_plugins/generation_base.py:558
+msgid "Load generation settings"
+msgstr "Загрузить параметры генерации"
+
+#: sg_plugins/generation_base.py:559
+msgid "Save"
+msgstr "Сохранить"
+
+#: sg_plugins/generation_base.py:559
+msgid "Open"
+msgstr "Открыть"
+
+#: sg_plugins/generation_base.py:559
 msgid "Cancel"
 msgstr "??????"
 
-#: sg_plugins/generation_base.py:565
-msgid "Enter a preset name"
-msgstr "??????? ??? ???????"
+#: sg_plugins/generation_base.py:562
+msgid "Generation settings (*.txt)"
+msgstr "Параметры генерации (*.txt)"
 
-#: sg_plugins/generation_base.py:568
-msgid "Preset name already exists"
-msgstr "?????? ? ????? ?????? ??? ??????????"
+#: sg_plugins/generation_base.py:628
+msgid "Could not save generation settings to the image"
+msgstr "Не удалось сохранить параметры генерации в изображение"
+
+#: sg_plugins/generation_base.py:638
+msgid "The current image has no generation settings"
+msgstr "В текущем изображении нет параметров генерации"
 
 #: sg_plugins/img2img.py:7
 msgid "Image to image"
@@ -332,121 +356,96 @@ msgstr ""
 msgid "Selected layers have the following data associated with them:"
 msgstr ""
 
-#: sg_plugins/lora_selector.py:37
+#: sg_plugins/lora_selector.py:27
 msgid "Search LoRA name or alias"
 msgstr "Поиск LoRA по имени или псевдониму"
 
-#: sg_plugins/lora_selector.py:39
+#: sg_plugins/lora_selector.py:29
 msgid "Refresh LoRAs"
 msgstr "Обновить LoRA"
 
-#: sg_plugins/lora_selector.py:42
-msgid "Add LoRA"
-msgstr "Добавить LoRA"
-
-#: sg_plugins/lora_selector.py:49
+#: sg_plugins/lora_selector.py:36
 msgid "LoRA name"
 msgstr "Имя LoRA"
 
-#: sg_plugins/lora_selector.py:49
+#: sg_plugins/lora_selector.py:36
 msgid "Alias"
 msgstr "Псевдоним"
 
-#: sg_plugins/lora_selector.py:63
+#: sg_plugins/lora_selector.py:50
 msgid "LoRA details"
 msgstr "Сведения о LoRA"
 
-#: sg_plugins/lora_selector.py:68
-msgid "Final LoRA tags"
-msgstr "Итоговые теги LoRA"
-
-#: sg_plugins/lora_selector.py:142
-msgid "Enabled"
-msgstr "Включено"
-
-#: sg_plugins/lora_selector.py:146
-#, python-brace-format
-msgid "Alias: {alias}"
-msgstr "Псевдоним: {alias}"
-
-#: sg_plugins/lora_selector.py:152 sg_proc_arguments.py:321
-msgid "Weight"
-msgstr "Вес"
-
-#: sg_plugins/lora_selector.py:156
-msgid "Remove"
-msgstr "Удалить"
-
-#: sg_plugins/panel.py:35
+#: sg_plugins/panel.py:34
 msgid "Open generation panel"
 msgstr "Открыть панель генерации"
 
-#: sg_plugins/panel.py:36
+#: sg_plugins/panel.py:35
 msgid "Open the persistent GimpFusion generation window"
 msgstr "Открыть постоянное окно генерации GimpFusion"
 
-#: sg_plugins/panel.py:96
+#: sg_plugins/panel.py:95
 msgid "Connecting to Forge"
 msgstr "Подключение к Forge"
 
-#: sg_plugins/panel.py:176
+#: sg_plugins/panel.py:174
 msgid "Target image"
 msgstr "Целевое изображение"
 
-#: sg_plugins/panel.py:189
+#: sg_plugins/panel.py:187
 msgid "Show a system notification after generation"
 msgstr "Показывать системное уведомление после генерации"
 
-#: sg_plugins/panel.py:197
+#: sg_plugins/panel.py:195
 msgid "Close"
 msgstr "Закрыть"
 
-#: sg_plugins/panel.py:254 sg_plugins/panel.py:409
+#: sg_plugins/panel.py:252 sg_plugins/panel.py:406
 msgid "Closing panel"
 msgstr "Закрытие панели"
 
-#: sg_plugins/panel.py:258
+#: sg_plugins/panel.py:256
 msgid "Generation is busy or needs input"
 msgstr "Генерация выполняется или требует входных данных"
 
-#: sg_plugins/panel.py:344 sg_plugins/panel.py:345 sg_plugins/panel.py:349
-#: sg_plugins/panel.py:350
+#: sg_plugins/panel.py:340 sg_plugins/panel.py:341 sg_plugins/panel.py:345
+#: sg_plugins/panel.py:346
 msgid "Generation interrupted"
 msgstr "Генерация прервана"
 
-#: sg_plugins/panel.py:353 sg_plugins/panel.py:359
+#: sg_plugins/panel.py:349 sg_plugins/panel.py:355
 msgid "GimpFusion generation finished"
 msgstr "Генерация GimpFusion завершена"
 
-#: sg_plugins/panel.py:354
+#: sg_plugins/panel.py:350
 #, python-brace-format
 msgid "Inserted {count} candidates into {name}"
 msgstr "В {name} добавлено вариантов: {count}"
 
-#: sg_plugins/panel.py:360
+#: sg_plugins/panel.py:356
 #, python-brace-format
 msgid "{name}: {count} candidates"
 msgstr "{name}: вариантов — {count}"
 
-#: sg_plugins/panel.py:363
+#: sg_plugins/panel.py:359
 msgid "Generation failed"
 msgstr "Ошибка генерации"
 
-#: sg_plugins/panel.py:373
+#: sg_plugins/panel.py:369
 #, python-brace-format
 msgid "Notification failed with exit code {code}"
 msgstr "Ошибка уведомления, код завершения {code}"
 
-#: sg_plugins/panel.py:375
+#: sg_plugins/panel.py:371
 msgid "Notification timed out"
 msgstr "Истекло время отправки уведомления"
 
-#: sg_plugins/panel.py:377
+#: sg_plugins/panel.py:373
 #, python-brace-format
 msgid "Notification failed: {error}"
 msgstr "Ошибка уведомления: {error}"
 
-#: sg_plugins/panel.py:409
+#: sg_plugins/panel.py:406
 msgid "Interrupting generation"
 msgstr "Прерывание генерации"
 
@@ -751,6 +750,10 @@ msgstr ""
 msgid "Control Mode"
 msgstr ""
 
+#: sg_proc_arguments.py:321
+msgid "Weight"
+msgstr "Вес"
+
 #: sg_proc_arguments.py:322
 msgid "Guidance Start (T)"
 msgstr ""
@@ -774,6 +777,41 @@ msgstr ""
 #: sg_proc_arguments.py:331
 msgid "ControlNet preprocessing resolution"
 msgstr "?????????? ????????????? ControlNet"
+
+#~ msgid "Enter a finite LoRA weight"
+#~ msgstr "Введите конечное значение веса LoRA"
+
+#~ msgid "Delete preset"
+#~ msgstr "??????? ??????"
+
+#~ msgid "Preset actions"
+#~ msgstr "Действия с пресетами"
+
+#, python-brace-format
+#~ msgid "Current preset: {name}"
+#~ msgstr "??????? ??????: {name}"
+
+#~ msgid "Enter a preset name"
+#~ msgstr "??????? ??? ???????"
+
+#~ msgid "Preset name already exists"
+#~ msgstr "?????? ? ????? ?????? ??? ??????????"
+
+#~ msgid "Add LoRA"
+#~ msgstr "Добавить LoRA"
+
+#~ msgid "Final LoRA tags"
+#~ msgstr "Итоговые теги LoRA"
+
+#~ msgid "Enabled"
+#~ msgstr "Включено"
+
+#, python-brace-format
+#~ msgid "Alias: {alias}"
+#~ msgstr "Псевдоним: {alias}"
+
+#~ msgid "Remove"
+#~ msgstr "Удалить"
 
 #~ msgid "Source: {width} x {height}"
 #~ msgstr "????????: {width} x {height}"

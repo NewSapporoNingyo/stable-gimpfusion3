@@ -24,7 +24,7 @@ STABLE_GIMPFUSION_DEFAULT_SETTINGS = {
     "is_server_running": False,
     "panel_state": {
         "parameters": None,
-        "preset": "",
+        "file_path": "",
         "width": 480,
         "height": 800,
         "notification_toast": True,

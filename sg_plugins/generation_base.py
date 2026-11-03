@@ -1,12 +1,14 @@
-"""Shared generation dialog, named presets and GIMP/Forge integration."""
+"""Shared generation editor, portable settings and GIMP/Forge integration."""
 
 from __future__ import annotations
 
+import configparser
 import json
 import math
 
 from concurrent.futures import ThreadPoolExecutor, wait
 from dataclasses import dataclass
+from pathlib import Path
 from threading import Event
 from typing import Any, cast
 
@@ -15,18 +17,24 @@ import requests
 
 from sg_constants import CONTROL_MODES, CONTROLNET_RESIZE_MODES, INPAINT_FILL_MODES, RESIZE_MODES
 from sg_generation import (
+    COMMON_PARAMETERS,
     CONTROLNET_PARAMETERS,
     GENERATION_MODES,
     GENERATION_PARAMETERS,
+    GENERATION_PARASITE,
+    MODE_PARAMETERS,
+    MODE_SPECIFIC_PARAMETERS,
     build_request,
     generation_size,
     insertion_size,
     integer_seed,
+    parse_generation,
+    serialize_generation,
     validate_dimensions,
 )
 from sg_gtk_utils import add_textarea_to_container
 from sg_i18n import _
-from sg_loras import LoraCatalog, validate_loras
+from sg_loras import LoraCatalog
 from sg_plugins import PluginBase
 from sg_plugins.lora_selector import LoraSelector
 from sg_proc_arguments import (
@@ -110,34 +118,38 @@ class GenerationPluginBase(PluginBase):
                 procedure, self.settings.get("cn_modules"), self.settings.get("cn_models"),
                 CONTROLNET_RESIZE_MODES, CONTROL_MODES, prefix=f"cn{slot}_",
             )
-        procedure.add_string_argument("loras", "LoRA", "LoRA", "[]", flags)
 
     def collect_values(self, config: Gimp.ProcedureConfig) -> dict[str, Any]:
         values = {name: config.get_property(name) for name in GENERATION_PARAMETERS}
         values["seed"] = integer_seed(values["seed"])
-        values["loras"] = json.loads(config.get_property("loras"))
         return values
 
-    def validate_preset(self, procedure: Gimp.Procedure, preset: dict[str, Any]) -> None:
+    def validate_parameters(self, procedure: Gimp.Procedure, values: dict[str, Any]) -> None:
         config = procedure.create_config()
         for name in GENERATION_PARAMETERS:
-            value = preset[name]
+            value = values[name]
             spec = procedure.find_argument(name.replace("_", "-"))
             expected_type = type(config.get_property(name))
             valid_type = type(value) in (int, float) if expected_type is float else type(value) is expected_type
             if not valid_type:
-                raise ValueError(_("Invalid preset field: {field}").format(field=name))
+                raise ValueError(_("Invalid generation field: {field}").format(field=name))
             if expected_type in (int, float) and (
                 not math.isfinite(value) or not spec.minimum <= value <= spec.maximum
             ):
-                raise ValueError(_("Invalid preset field: {field}").format(field=name))
+                raise ValueError(_("Invalid generation field: {field}").format(field=name))
             if (
                 expected_type is str and name not in ("prompt", "negative_prompt")
                 and not Gimp.param_spec_choice_get_choice(spec).is_valid(value)
             ):
-                raise ValueError(_("Unavailable preset option: {field} = {value}").format(field=name, value=value))
-        integer_seed(preset["seed"])
-        validate_loras(preset["loras"])
+                raise ValueError(_("Unavailable generation option: {field} = {value}").format(field=name, value=value))
+        integer_seed(values["seed"])
+        validate_dimensions(values["width"], values["height"])
+
+    def read_parameters(self, procedure: Gimp.Procedure, text: str) -> dict[str, Any]:
+        defaults = self.collect_values(procedure.create_config())
+        values = parse_generation(text, defaults)
+        self.validate_parameters(procedure, values)
+        return values
 
     def main(
         self, procedure: Gimp.Procedure, run_mode: Gimp.RunMode, image: Gimp.Image,
@@ -145,11 +157,14 @@ class GenerationPluginBase(PluginBase):
     ) -> Gimp.ProcedureReturn:
         try:
             source = None
-            validate_loras(json.loads(config.get_property("loras")))
-            catalog = LoraCatalog(self.api.get("/sdapi/v1/loras"), self.settings.get("lora_preferred_name"))
             if run_mode == Gimp.RunMode.INTERACTIVE:
                 config.set_property("generation_mode", self.initial_mode)
                 GimpUi.init(procedure.get_name())
+                catalog = LoraCatalog(
+                    self.api.get("/sdapi/v1/loras"), self.settings.get("lora_preferred_name"),
+                    self.settings.get("extra_networks_default_multiplier"),
+                    self.settings.get("extra_networks_add_text_separator"),
+                )
                 editor = GenerationDialog(self, procedure, config, image, catalog)
                 while editor.dialog.run():
                     editor.refresh_source()
@@ -159,10 +174,11 @@ class GenerationPluginBase(PluginBase):
                     editor.dialog.destroy()
                     return procedure.new_return_values(Gimp.PDBStatusType.CANCEL, GLib.Error())
                 source = editor.source
-                catalog = editor.loras.catalog
+                values = editor.collect_values()
                 editor.dialog.destroy()
-            values = self.collect_values(config)
-            self.generate(image, config, values, catalog, source)
+            else:
+                values = self.collect_values(config)
+            self.generate(image, config, values, source)
             return procedure.new_return_values(Gimp.PDBStatusType.SUCCESS, GLib.Error())
         except (requests.RequestException, ValueError, OSError) as error:
             Gimp.message(str(error))
@@ -172,7 +188,6 @@ class GenerationPluginBase(PluginBase):
 
     def prepare_request(
         self, image: Gimp.Image, config: Gimp.ProcedureConfig, values: dict[str, Any],
-        lora_catalog: LoraCatalog,
         source: GenerationSource | None = None,
     ) -> GenerationRequest:
         mode = values["generation_mode"]
@@ -184,7 +199,7 @@ class GenerationPluginBase(PluginBase):
         x1, y1, x2, y2 = source.selection_bounds
         size = x2 - x1, y2 - y1
         data = build_request(
-            values, self.settings.get("prompt"), self.settings.get("negative_prompt"), size, lora_catalog,
+            values, self.settings.get("prompt"), self.settings.get("negative_prompt"), size,
         )
         cache_enabled = bool(self.settings.get("cache_tobase64", True))
         if mode != "txt2img":
@@ -212,9 +227,9 @@ class GenerationPluginBase(PluginBase):
 
     def generate(
         self, image: Gimp.Image, config: Gimp.ProcedureConfig, values: dict[str, Any],
-        lora_catalog: LoraCatalog, source: GenerationSource | None = None,
+        source: GenerationSource | None = None,
     ) -> None:
-        request = self.prepare_request(image, config, values, lora_catalog, source)
+        request = self.prepare_request(image, config, values, source)
         Gimp.progress_init(_("Generating image"))
         with ThreadPoolExecutor(max_workers=1) as executor:
             pending = executor.submit(request.run, Event())
@@ -235,7 +250,7 @@ class GenerationPluginBase(PluginBase):
 class GenerationDialog:
     def __init__(
         self, plugin: GenerationPluginBase, procedure: Gimp.Procedure, config: Gimp.ProcedureConfig,
-        image: Gimp.Image | None, lora_catalog: LoraCatalog, *, load_last_preset: bool = True,
+        image: Gimp.Image | None, lora_catalog: LoraCatalog, *,
         refresh_on_focus: bool = True,
     ) -> None:
         self.plugin = plugin
@@ -247,7 +262,9 @@ class GenerationDialog:
         self.source: GenerationSource | None = None
         self.ready = False
         self.busy = False
-        self.active_preset = ""
+        self.file_path = ""
+        self.settings_image = ""
+        self.pending_parameters: dict[str, Any] = {}
         self.dialog = GimpUi.ProcedureDialog.new(procedure, config, _("GimpFusion generation"))
         self.dialog.set_ok_label(_("Generate"))
         for name in (
@@ -266,23 +283,22 @@ class GenerationDialog:
         settings_buttons.hide()
         self.root = root = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         content.pack_start(root, True, True, 0)
-        row = Gtk.Box(spacing=6)
-        root.pack_start(row, False, False, 0)
-        self.preset_list = Gtk.ComboBoxText()
-        for renderer in self.preset_list.get_cells():
-            renderer.set_property("ellipsize", Pango.EllipsizeMode.END)
-            renderer.set_property("max-width-chars", 24)
-        row.pack_start(self.preset_list, True, True, 0)
-        self.save_button = Gtk.Button(label=_("Save preset"))
-        self.save_as_button = Gtk.Button(label=_("Save preset as"))
-        preset_buttons = Gtk.Grid(column_spacing=6, row_spacing=6, column_homogeneous=True)
+        self.save_button = Gtk.Button(label=_("Save file"))
+        self.save_as_button = Gtk.Button(label=_("Save file as"))
+        self.save_image_button = Gtk.Button(label=_("Save to image"))
+        self.load_image_button = Gtk.Button(label=_("Load from image"))
+        settings_buttons = Gtk.Grid(column_spacing=6, row_spacing=6, column_homogeneous=True)
         for index, (button, callback) in enumerate((
-            (Gtk.Button(label=_("Load preset")), self.load_selected),
+            (Gtk.Button(label=_("Load file")), self.load_file),
             (self.save_button, self.save_current),
             (self.save_as_button, self.save_as),
-            (Gtk.Button(label=_("Delete preset")), self.delete_selected),
+            (self.save_image_button, self.save_to_image),
+            (self.load_image_button, self.load_from_image),
         )):
-            preset_buttons.attach(button, index % 2, index // 2, 1, 1)
+            settings_buttons.attach(button, index % 2, index // 2, 1, 1)
+            button.get_child().set_line_wrap(True)
+            button.get_child().set_line_wrap_mode(Pango.WrapMode.WORD_CHAR)
+            button.get_child().set_max_width_chars(16)
             button.connect("clicked", callback)
         self.current_label = Gtk.Label(xalign=0)
         root.pack_start(self.current_label, False, False, 0)
@@ -304,9 +320,9 @@ class GenerationDialog:
         root.pack_start(scroll, True, True, 0)
         body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
         scroll.add(body)
-        preset_actions = Gtk.Expander(label=_("Preset actions"))
-        preset_actions.add(preset_buttons)
-        body.add(preset_actions)
+        settings_actions = Gtk.Expander(label=_("Generation settings"))
+        settings_actions.add(settings_buttons)
+        body.add(settings_actions)
         source_frame = Gtk.Frame(label=_("Input source"))
         source_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, margin=8)
         source_frame.add(source_box)
@@ -318,7 +334,7 @@ class GenerationDialog:
         add_textarea_to_container(procedure, config, "prompt", body)
         add_textarea_to_container(procedure, config, "negative-prompt", body)
         lora_frame = Gtk.Expander(label="LoRA")
-        self.loras = LoraSelector(plugin.api, config, lora_catalog, plugin.settings.get("prompt"), self.refresh_mode)
+        self.loras = LoraSelector(plugin.api, config, lora_catalog)
         self.loras.set_border_width(8)
         lora_frame.add(self.loras)
         body.add(lora_frame)
@@ -397,24 +413,21 @@ class GenerationDialog:
             self.dialog.connect("focus-in-event", self.refresh_source)
         for spin in self.dimension_spins:
             spin.connect("changed", self.refresh_mode)
-        last = plugin.settings.get("last_preset")
-        self.refresh_presets(last)
-        if load_last_preset and last is not None:
-            self.load_selected(same_mode_only=True)
+        self.refresh_settings_label()
 
     def change_dimension(self, slider: Gtk.Range, _scroll: Gtk.ScrollType, value: float) -> bool:
         slider.set_value(8 * round(value / 8))
         return True
 
-    def refresh_presets(self, selected: str | None) -> None:
-        self.preset_list.remove_all()
-        for name in self.plugin.settings.get("presets"):
-            self.preset_list.append(name, name)
-        self.preset_list.set_active_id(selected)
-        self.current_label.set_text(
-            _("Current preset: {name}").format(name=self.active_preset)
-            if self.active_preset else _("Unsaved parameters"),
-        )
+    def refresh_settings_label(self) -> None:
+        if self.file_path:
+            label = _("File: {name}").format(name=Path(self.file_path).name)
+        elif self.settings_image:
+            label = _("Settings from image: {name}").format(name=self.settings_image)
+        else:
+            label = _("Unsaved parameters")
+        self.current_label.set_text(label)
+        self.current_label.set_tooltip_text(self.file_path or label)
         self.refresh_mode()
 
     def refresh_mode(self, *_args: Any) -> None:
@@ -443,9 +456,11 @@ class GenerationDialog:
         except ValueError:
             dimension_error = _("Width and height must be positive multiples of 8")
         valid_dimensions = not dimension_error
-        valid_loras = not self.loras.invalid_weights
-        self.save_button.set_sensitive(bool(self.active_preset) and valid_dimensions and valid_loras)
-        self.save_as_button.set_sensitive(valid_dimensions and valid_loras)
+        self.save_button.set_sensitive(valid_dimensions)
+        self.save_as_button.set_sensitive(valid_dimensions)
+        has_image = self.image is not None and self.image.is_valid()
+        self.save_image_button.set_sensitive(has_image and valid_dimensions)
+        self.load_image_button.set_sensitive(has_image)
         width, height = generation_size(values, (x2 - x1, y2 - y1))
         if not use_dimensions:
             dimension_error = ""
@@ -459,7 +474,7 @@ class GenerationDialog:
         if self.source is not None:
             problem = problem or self.source.problem(mode, self.config.get_property("invert_mask"))
         self.input_label.set_text(problem)
-        self.ready = not dimension_error and valid_loras and not problem
+        self.ready = not dimension_error and not problem
         self.dialog.set_response_sensitive(Gtk.ResponseType.OK, self.ready and not self.busy)
         if dimension_error or self.source is None:
             self.size_label.set_text("")
@@ -477,6 +492,11 @@ class GenerationDialog:
 
     def refresh_source(self, *_args: Any) -> bool:
         self.source_mode = self.config.get_property("generation_mode")
+        self.config.freeze_notify()
+        for name in MODE_PARAMETERS[self.source_mode]:
+            if name in self.pending_parameters:
+                self.config.set_property(name, self.pending_parameters.pop(name))
+        self.config.thaw_notify()
         if self.image is None:
             self.source = None
             self.source_error = _("Select a target image")
@@ -518,80 +538,115 @@ class GenerationDialog:
         self.refresh_mode()
         return False
 
-    def load_selected(self, _button: Gtk.Button | None = None, *, same_mode_only: bool = False) -> None:
-        name = self.preset_list.get_active_id()
-        if name is None:
+    def collect_values(self) -> dict[str, Any]:
+        return {**self.plugin.collect_values(self.config), **self.pending_parameters}
+
+    def load_parameters(self, values: dict[str, Any]) -> None:
+        mode = self.config.get_property("generation_mode")
+        self.pending_parameters = {
+            name: values[name] for name in MODE_SPECIFIC_PARAMETERS if name not in MODE_PARAMETERS[mode]
+        }
+        self.config.freeze_notify()
+        for name in (*COMMON_PARAMETERS, *MODE_PARAMETERS[mode]):
+            self.config.set_property(name, values[name])
+        self.config.thaw_notify()
+        self.refresh_source()
+
+    def choose_file(self, action: Gtk.FileChooserAction) -> str | None:
+        saving = action == Gtk.FileChooserAction.SAVE
+        chooser = Gtk.FileChooserNative.new(
+            _("Save generation settings") if saving else _("Load generation settings"),
+            self.root.get_toplevel(), action, _("Save") if saving else _("Open"), _("Cancel"),
+        )
+        file_filter = Gtk.FileFilter()
+        file_filter.set_name(_("Generation settings (*.txt)"))
+        file_filter.add_pattern("*.txt")
+        chooser.add_filter(file_filter)
+        if self.file_path:
+            chooser.set_current_folder(str(Path(self.file_path).parent))
+        if saving:
+            chooser.set_do_overwrite_confirmation(True)
+            chooser.set_current_name(Path(self.file_path).name if self.file_path else "generation.txt")
+        elif self.file_path:
+            chooser.set_filename(self.file_path)
+        try:
+            return chooser.get_filename() if chooser.run() == Gtk.ResponseType.ACCEPT else None
+        finally:
+            chooser.destroy()
+
+    def load_file(self, *_args: Any) -> None:
+        path = self.choose_file(Gtk.FileChooserAction.OPEN)
+        if path is None:
             return
         try:
-            preset = self.plugin.settings.get("presets")[name]
-            self.plugin.validate_preset(self.procedure, preset)
-            if same_mode_only and preset["generation_mode"] != self.plugin.initial_mode:
-                return
-            self.plugin.settings.set("last_preset", name)
-            self.config.freeze_notify()
-            for field in GENERATION_PARAMETERS:
-                self.config.set_property(field, preset[field])
-            self.config.set_property("loras", json.dumps(preset["loras"]))
-            self.config.thaw_notify()
-            self.active_preset = name
-            self.error_label.set_text("")
-            self.refresh_presets(name)
-        except (KeyError, TypeError, ValueError, OSError) as error:
+            values = self.plugin.read_parameters(self.procedure, Path(path).read_text(encoding="utf-8-sig"))
+        except (configparser.Error, KeyError, ValueError, OSError) as error:
             self.error_label.set_text(str(error))
+            return
+        self.load_parameters(values)
+        self.file_path = path
+        self.settings_image = ""
+        self.error_label.set_text("")
+        self.refresh_settings_label()
 
     def save_current(self, *_args: Any) -> None:
+        if self.file_path:
+            self.write_file(self.file_path)
+        else:
+            self.save_as()
+
+    def write_file(self, path: str) -> None:
         try:
-            values = self.plugin.collect_values(self.config)
+            values = self.collect_values()
             validate_dimensions(values["width"], values["height"])
-            self.plugin.settings.save_preset(self.active_preset, values)
-            self.error_label.set_text("")
-            self.refresh_presets(self.active_preset)
+            Path(path).write_text(serialize_generation(values), encoding="utf-8")
         except (ValueError, OSError) as error:
             self.error_label.set_text(str(error))
+            return
+        self.file_path = path
+        self.settings_image = ""
+        self.error_label.set_text("")
+        self.refresh_settings_label()
 
     def save_as(self, *_args: Any) -> None:
-        dialog = Gtk.Dialog(title=_("Save preset as"), transient_for=self.root.get_toplevel(), modal=True)
-        dialog.add_buttons(_("Cancel"), Gtk.ResponseType.CANCEL, _("Save preset"), Gtk.ResponseType.OK)
-        entry = Gtk.Entry()
-        entry.set_activates_default(True)
-        dialog.set_default_response(Gtk.ResponseType.OK)
-        error_label = Gtk.Label(wrap=True)
-        dialog.get_content_area().add(entry)
-        dialog.get_content_area().add(error_label)
-        dialog.show_all()
-        while dialog.run() == Gtk.ResponseType.OK:
-            name = entry.get_text().strip()
-            if not name:
-                error_label.set_text(_("Enter a preset name"))
-                continue
-            if name in self.plugin.settings.get("presets"):
-                error_label.set_text(_("Preset name already exists"))
-                continue
-            try:
-                values = self.plugin.collect_values(self.config)
-                validate_dimensions(values["width"], values["height"])
-                self.plugin.settings.save_preset(name, values)
-            except (ValueError, OSError) as error:
-                error_label.set_text(str(error))
-                continue
-            self.active_preset = name
-            self.refresh_presets(name)
-            self.error_label.set_text("")
-            break
-        dialog.destroy()
+        path = self.choose_file(Gtk.FileChooserAction.SAVE)
+        if path is None:
+            return
+        if not Path(path).suffix:
+            path += ".txt"
+        self.write_file(path)
 
-    def delete_selected(self, *_args: Any) -> None:
-        name = self.preset_list.get_active_id()
-        if name is None:
+    def save_to_image(self, *_args: Any) -> None:
+        try:
+            values = self.collect_values()
+            validate_dimensions(values["width"], values["height"])
+            parasite = Gimp.Parasite.new(
+                GENERATION_PARASITE, Gimp.PARASITE_PERSISTENT | Gimp.PARASITE_UNDOABLE,
+                serialize_generation(values).encode("utf-8"),
+            )
+            if not cast(Gimp.Image, self.image).attach_parasite(parasite):
+                raise ValueError(_("Could not save generation settings to the image"))
+            self.error_label.set_text("")
+            Gimp.displays_flush()
+        except (ValueError, GLib.Error) as error:
+            self.error_label.set_text(str(error))
+
+    def load_from_image(self, *_args: Any) -> None:
+        image = cast(Gimp.Image, self.image)
+        parasite = image.get_parasite(GENERATION_PARASITE)
+        if parasite is None:
+            self.error_label.set_text(_("The current image has no generation settings"))
             return
         try:
-            self.plugin.settings.delete_preset(name)
-            if self.active_preset == name:
-                self.active_preset = ""
-            self.refresh_presets(self.active_preset)
-            self.error_label.set_text("")
-        except OSError as error:
+            values = self.plugin.read_parameters(self.procedure, bytes(parasite.get_data()).decode("utf-8"))
+        except (configparser.Error, KeyError, ValueError) as error:
             self.error_label.set_text(str(error))
+            return
+        self.load_parameters(values)
+        self.file_path = ""
+        self.settings_image = image.get_name()
+        self.error_label.set_text("")
+        self.refresh_settings_label()
 
     def read_layer(self, _button: Gtk.Button, slot: int) -> None:
         layer = self.config.get_property(f"cn{slot}_layer")
@@ -606,7 +661,7 @@ class GenerationDialog:
                 if field == "control_mode" and isinstance(value, int):
                     value = CONTROL_MODES[value]
                 values[f"cn{slot}_{field}"] = value
-            self.plugin.validate_preset(self.procedure, values)
+            self.plugin.validate_parameters(self.procedure, values)
             for field in CONTROLNET_PARAMETERS:
                 self.config.set_property(f"cn{slot}_{field}", values[f"cn{slot}_{field}"])
             self.error_label.set_text("")

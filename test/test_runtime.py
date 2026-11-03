@@ -13,7 +13,6 @@ import gi
 import requests
 
 from sg_generation import insertion_size
-from sg_loras import LoraCatalog
 from sg_plugins.config import ConfigModelPlugin
 from sg_plugins.generation_base import GenerationPluginBase
 from sg_sources import GenerationSource
@@ -94,7 +93,7 @@ class RuntimeTests(unittest.TestCase):
             "generation_mode": "txt2img", "width": 64, "height": 64, "insert_mode": "Insert as is",
             "prompt": "test", "negative_prompt": "", "seed": 0, "batch_size": 1, "steps": 5,
             "cfg_scale": 5, "sampler_index": "Euler", "restore_faces": False, "tiling": False,
-            "loras": [], "invert_mask": False, "cn1_enabled": False, "cn2_enabled": False,
+            "invert_mask": False, "cn1_enabled": False, "cn2_enabled": False,
             "cn_skip_annotator_layers": True, "sd_model_checkpoint": "model",
         }
         source = GenerationSource("test", (64, 64), (0, 0, 64, 64), None, "", (0, 0), None, None, "")
@@ -131,10 +130,10 @@ class RuntimeTests(unittest.TestCase):
         ):
             if generation_failure:
                 with self.assertRaisesRegex(requests.ConnectionError, "generation failed"):  # noqa: PT027
-                    plugin.generate(MagicMock(), MagicMock(), values, LoraCatalog([], "Filename"), source)
+                    plugin.generate(MagicMock(), MagicMock(), values, source)
                 layers.assert_not_called()
             else:
-                plugin.generate(MagicMock(), MagicMock(), values, LoraCatalog([], "Filename"), source)
+                plugin.generate(MagicMock(), MagicMock(), values, source)
                 layers.assert_called_once()
             assert message.call_count == int(progress_failure)
             assert update.call_count == int(not progress_failure)

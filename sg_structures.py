@@ -147,16 +147,13 @@ class MyShelf:
         self.load(default_shelf)
 
     def load(self, default_shelf: dict[str, Any]) -> None:
-        self.data = {**default_shelf, "presets": {}, "last_preset": None}
+        self.data = {**default_shelf}
         self.reload()
 
     def reload(self) -> None:
         if os.path.isfile(self.file_path):
             with open(self.file_path, encoding="utf-8") as file:
                 self.data.update(json.load(file))
-        for preset in self.data["presets"].values():
-            if "inpaint_full_res_padding" not in preset:
-                preset["inpaint_full_res_padding"] = 10
 
     def save(self, data: dict[str, Any] | None = None) -> None:
         if data is not None:
@@ -164,19 +161,6 @@ class MyShelf:
             self.data.update(data)
         with open(self.file_path, "w", encoding="utf-8") as file:
             json.dump(self.data, file, ensure_ascii=False, indent=2)
-
-    def save_preset(self, name: str, preset: dict[str, Any]) -> None:
-        self.reload()
-        self.data["presets"][name] = preset
-        self.data["last_preset"] = name
-        self.save()
-
-    def delete_preset(self, name: str) -> None:
-        self.reload()
-        del self.data["presets"][name]
-        if self.data["last_preset"] == name:
-            self.data["last_preset"] = None
-        self.save()
 
     def get(self, name, default_value=None):
         return self.data.get(name, default_value)

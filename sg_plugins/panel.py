@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import subprocess
 
 from collections.abc import Callable
@@ -119,7 +118,10 @@ class PanelSession:
     @staticmethod
     def read_backend(api: ApiClient) -> tuple[dict[str, Any], LoraCatalog]:
         options = fetch_stablediffusion_options(api)
-        catalog = LoraCatalog(api.get("/sdapi/v1/loras"), options["lora_preferred_name"])
+        catalog = LoraCatalog(
+            api.get("/sdapi/v1/loras"), options["lora_preferred_name"],
+            options["extra_networks_default_multiplier"], options["extra_networks_add_text_separator"],
+        )
         return options, catalog
 
     def connected(self, future: Future[Any]) -> None:
@@ -149,19 +151,15 @@ class PanelSession:
         configuration = parameters.create_config()
         saved = self.state["parameters"]
         if saved is not None:
-            self.plugin.validate_preset(parameters, saved)
+            self.plugin.validate_parameters(parameters, saved)
             for name in GENERATION_PARAMETERS:
                 configuration.set_property(name, saved[name])
-            configuration.set_property("loras", json.dumps(saved["loras"]))
         self.editor = editor = GenerationDialog(
             self.plugin, parameters, configuration, self.image, catalog,
-            load_last_preset=False, refresh_on_focus=False,
+            refresh_on_focus=False,
         )
-        if saved is None:
-            editor.load_selected()
-        else:
-            editor.active_preset = self.state["preset"]
-            editor.refresh_presets(editor.active_preset)
+        editor.file_path = self.state.get("file_path", "")
+        editor.refresh_settings_label()
         self.window.get_child().destroy()
         editor.dialog.get_content_area().remove(editor.root)
         editor.root.set_border_width(12)
@@ -270,14 +268,12 @@ class PanelSession:
         try:
             self.plugin.settings.reload()
             self.plugin.api = ApiClient(self.plugin.settings.get("api_base"))
-            editor.loras.prompt_suffix = self.plugin.settings.get("prompt")
-            editor.loras.update_preview()
             editor.refresh_source()
             if not editor.ready:
                 return False
-            values = self.plugin.collect_values(editor.config)
+            values = editor.collect_values()
             self.task = self.plugin.prepare_request(
-                cast(Gimp.Image, editor.image), editor.config, values, editor.loras.catalog, editor.source,
+                cast(Gimp.Image, editor.image), editor.config, values, editor.source,
             )
         except (ValueError, OSError) as error:
             self.status.set_text(str(error))
@@ -379,12 +375,14 @@ class PanelSession:
     def refresh_loras(self, *_args: Any) -> None:
         editor = cast(GenerationDialog, self.editor)
         editor.loras.refresh_button.set_sensitive(False)
-        self.submit(self.read_loras, self.loras_received, self.plugin.api, editor.loras.catalog.preferred_name)
+        self.submit(self.read_loras, self.loras_received, self.plugin.api, editor.loras.catalog)
 
     @staticmethod
-    def read_loras(api: ApiClient, preferred_name: str) -> LoraCatalog:
+    def read_loras(api: ApiClient, catalog: LoraCatalog) -> LoraCatalog:
         api.post("/sdapi/v1/refresh-loras")
-        return LoraCatalog(api.get("/sdapi/v1/loras"), preferred_name)
+        return LoraCatalog(
+            api.get("/sdapi/v1/loras"), catalog.preferred_name, catalog.default_multiplier, catalog.separator,
+        )
 
     def loras_received(self, future: Future[Any]) -> None:
         selector = cast(GenerationDialog, self.editor).loras
@@ -396,7 +394,6 @@ class PanelSession:
             return
         selector.error_label.set_text("")
         selector.filter_catalog()
-        selector.update_preview()
 
     def close(self, *_args: Any) -> bool:
         if self.closing:
@@ -417,10 +414,11 @@ class PanelSession:
         width, height = self.window.get_size()
         state = {**self.state, "width": width, "height": height}
         if self.editor is not None:
-            state.update({
-                "parameters": self.plugin.collect_values(self.editor.config), "preset": self.editor.active_preset,
+            state = {
+                "width": width, "height": height,
+                "parameters": self.editor.collect_values(), "file_path": self.editor.file_path,
                 "notification_toast": self.notification.get_active(),
-            })
+            }
         self.plugin.settings.save({"panel_state": state})
         self.executor.shutdown(wait=True)
         if self.editor is not None:
