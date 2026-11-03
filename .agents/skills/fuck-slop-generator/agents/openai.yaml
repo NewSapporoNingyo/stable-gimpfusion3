@@ -1,0 +1,4 @@
+interface:
+  display_name: "Fuck Slop Generator"
+  short_description: "Audit and reduce evidence-backed code slop"
+  default_prompt: "Use $fuck-slop-generator to audit this gimp plugin area and repair only evidence-backed sustainability problems."
