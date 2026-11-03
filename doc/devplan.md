@@ -43,8 +43,8 @@ S1 确认环境后，按 S2–S5 完成现有对话框中的功能，再通过 S
 | [S2](#s2) | 完整命名预设 | [S2 待办](../TODO.md#s2) |
 | [S3](#s3) | 来源图层和蒙版展示 | [S3 待办](../TODO.md#s3) |
 | [S4](#s4) | LoRA 选择与预设联动 | [S4 待办](../TODO.md#s4) |
-| [S5](#s5) | 批次结果分组与挑选 | [S5 待办](../TODO.md#s5) |
-| [S6](#s6) | 可调整宽高的常驻窗口 | [S6 待办](../TODO.md#s6) |
+| [S5](#s5) | 可调整宽高的常驻窗口 | [S5 待办](../TODO.md#s5) |
+| [S6](#s6) | 批次结果分组与挑选 | [S6 待办](../TODO.md#s6) |
 | [S7](#s7) | 快捷键按当前参数生成 | [S7 待办](../TODO.md#s7) |
 | [S8](#s8) | 翻译、同步和完整工作流验收 | [S8 待办](../TODO.md#s8) |
 
@@ -131,22 +131,7 @@ S1 确认环境后，按 S2–S5 完成现有对话框中的功能，再通过 S
 
 <a id="s5"></a>
 
-## S5 将每批结果整理为图层组
-
-**主要位置：** ResponseLayers、LayerData 和三种模式的结果插入流程。
-
-1. 每次生成创建一个 `AI Results` 图层组，以模式和批次序号区分批次。每张候选作为子图层插入，并在图层名中显示 seed。
-2. 按 Forge 返回顺序排列候选，默认显示第一张，其余候选通过 GIMP 图层面板切换可见性。选中首张候选，供下一轮编辑和生成使用。
-3. 保持候选图像、seed 和 infotext 一一对应；按 S1 调研明确的 `cn_skip_annotator_layers` 规则处理 ControlNet 辅助图层，并使用明确的辅助图层名称。
-4. 将尺寸适配、偏移和选区蒙版处理应用到组内候选，并沿用 S1 确定的模式规则。
-5. 继续在候选图层的 `gimpfusion` Parasite 中保存 `info` 和 `seed`，补充本次实际提交的生成参数、模式、模型和 LoRA 配置。
-6. 将一批结果的分组、插入和属性设置合并为一次 GIMP 撤销操作。
-
-**完成条件：** 一次生成四张候选，图层组内顺序、seed、默认可见性和插入位置正确；可逐张比较并继续编辑；撤销可移除本批结果；XCF 重新打开后保留生成信息。
-
-<a id="s6"></a>
-
-## S6 实现可调整宽高的常驻窗口
+## S5 实现可调整宽高的常驻窗口
 
 **前置：** S2–S5 的参数、输入和结果处理已经完成。
 
@@ -165,6 +150,21 @@ S1 确认环境后，按 S2–S5 完成现有对话框中的功能，再通过 S
 **完成条件：** 窗口可调整宽高并参与 Windows 分屏；生成完成后持续显示；连续生成、切换图像和使用 GIMP 画笔顺畅；重复打开入口呈现同一面板；关闭后可重新打开并恢复状态。
 
 常驻过程的就绪通知见 [persistent_ready()](https://developer.gimp.org/api/3.0/libgimp/method.Procedure.persistent_ready.html)，GTK 主循环中的消息处理见 [persistent_enable()](https://developer.gimp.org/api/3.0/libgimp/method.PlugIn.persistent_enable.html)，过程间调用见 [add_temp_procedure()](https://developer.gimp.org/api/3.0/libgimp/method.PlugIn.add_temp_procedure.html)。
+
+<a id="s6"></a>
+
+## S6 将每批结果整理为图层组
+
+**主要位置：** ResponseLayers、LayerData 和三种模式的结果插入流程。
+
+1. 每次生成创建一个 `AI Results` 图层组，以模式和批次序号区分批次。每张候选作为子图层插入，并在图层名中显示 seed。
+2. 按 Forge 返回顺序排列候选，默认显示第一张，其余候选通过 GIMP 图层面板切换可见性。选中首张候选，供下一轮编辑和生成使用。
+3. 保持候选图像、seed 和 infotext 一一对应；按 S1 调研明确的 `cn_skip_annotator_layers` 规则处理 ControlNet 辅助图层，并使用明确的辅助图层名称。
+4. 将尺寸适配、偏移和选区蒙版处理应用到组内候选，并沿用 S1 确定的模式规则。
+5. 继续在候选图层的 `gimpfusion` Parasite 中保存 `info` 和 `seed`，补充本次实际提交的生成参数、模式、模型和 LoRA 配置。
+6. 将一批结果的分组、插入和属性设置合并为一次 GIMP 撤销操作。
+
+**完成条件：** 一次生成四张候选，图层组内顺序、seed、默认可见性和插入位置正确；可逐张比较并继续编辑；撤销可移除本批结果；XCF 重新打开后保留生成信息。
 
 <a id="s7"></a>
 
