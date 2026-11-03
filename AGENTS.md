@@ -93,6 +93,7 @@ git -C "C:\Users\LHR\AppData\Roaming\GIMP\3.2\plug-ins\stable-gimpfusion3" pull 
 - 代码改动后，对修改的文件运行 `ruff check <文件路径>`；涉及类型时运行 `mypy <文件路径>`。
 - 同步到插件目录后，在 GIMP 中检查菜单加载、Forge API 连接和受影响的生成或图层操作。
 - 交付时说明改动内容、检查命令和结果，以及 GIMP 内的验证情况。
+- computer use 只在任务存在必需确认的视觉元素或图形界面操作时才启动。尽量缩短使用computer use的时间和次数，使用完成时注意关闭computer use，避免computer use的全屏遮罩持续占用系统界面。
 - 当在codex中需要使用computer use（电脑操控）时，注意本设备上的computer use的窗口截图功能存在问题，必要时需使用全屏截图。
 - 每次开发任务结束后注意终止webui forge实例，避免其留存在agent内置终端中持续占用系统资源。
 - 确保插件内界面操作与代码实现接近webui forge中的逻辑，不得自行编造与webui不同或矛盾的新操作逻辑。本机webui在`C:\data\webui_forge_dev\stable-diffusion-webui-forge`目录下。
