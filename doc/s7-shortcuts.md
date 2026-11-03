@@ -36,3 +36,43 @@
 4. 在面板中设置参数，回到画布绘画，再按快捷键生成。
 
 设置方法见 [GIMP 键盘快捷键对话框](https://docs.gimp.org/3.0/en/gimp-help-keyboard-shortcuts.html)。
+
+## 实机验收
+
+代码提交 `48450b1` 推送后，正式插件目录通过 `pull --ff-only` 更新。
+在本机 GIMP 3.2.6、Python 3.14.7、GTK 3.24.52 中连接 Forge 验收。
+
+| 场景 | 结果 |
+| --- | --- |
+| 新命令首次调用 | 从菜单启动面板，恢复 txt2img 参数并生成 seed 77001 的 512×512 图层 |
+| 新命令调用已有面板 | 在画布新增笔画后调用菜单命令，沿用 inpaint 模式与 seed 77003，图层数从 2 增至 3 |
+| 三种菜单首次启动 | 三个实际 PDB 过程以 `INTERACTIVE` 调用，分别打开 txt2img、img2img、inpaint 面板，均返回 `SUCCESS` |
+| 首次启动的参数恢复 | 三种模式均保留 seed 77002 和蓝色房屋提示词，关闭后保存指定模式 |
+| 三种菜单调用已有面板 | 均返回 `SUCCESS`，复用同一个窗口并更新目标图像与模式 |
+| 文生图 | seed 77001，Euler、5 步、CFG 5，生成 512×512 图层，返回信息包含本次提示词 |
+| 图生图 | 编辑面板提示词并在来源图层绘画后生成，结果插入原目标图像 |
+| 局部重绘 | 当前选区覆盖 512×512 来源，seed 77003，返回信息包含蓝色房屋提示词、降噪强度 0.45 和 mask blur 4 |
+| 单任务与目标切换 | 连续调用返回 `SUCCESS`、`CANCEL`；任务期间切换目标返回 `SUCCESS`，结果进入任务开始时的目标 |
+
+`shortcutsrc` 已保存 `Ctrl+Alt+G`，菜单显示该组合键。
+电脑操控和用户实键调用期间，结果图层数量保持原值，按键触发待确认。
+TODO 的第三项保留为待验收。
+
+视觉检查使用全屏截图。独立快捷键对话框的自动输入会切回主窗口，绑定通过 GIMP 配置文件设置。
+批处理验收与普通 GIMP 会话分别验证，临时验收脚本保存在系统临时目录。
+
+## 检查
+
+GIMP Python 运行 37 项单元测试，全部通过。修改的 4 个 Python 文件通过 Ruff 和 mypy。
+en、it、ru 的新增文案已编译为 `.mo`，通过 gettext 加载并核对译文。
+
+```powershell
+& 'C:\Program Files\GIMP 3\bin\python.exe' -B -m unittest discover -s test
+$s7PythonFiles = @(
+    'stable-gimpfusion3.py', 'sg_plugins/panel.py',
+    'sg_plugins/generation_base.py', 'test/test_panel.py'
+)
+.\.venv\Scripts\ruff.exe check @s7PythonFiles
+.\.venv\Scripts\mypy.exe @s7PythonFiles
+git diff --check
+```
