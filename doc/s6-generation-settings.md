@@ -105,6 +105,25 @@ Euler、5 步、CFG 5，提示词包含 `<lora:lineweight_slider:0.25>`：
 视觉检查使用全屏截图。窗口截图工具返回超时，原生模态框的输入定位失败；
 原生保存、载入由用户完成点击，其余界面回调、数据核对和生成由验收脚本执行。
 
+## 安装副本复核
+
+代码提交 `de7ab28` 推送后，安装副本通过 `pull --ff-only` 更新。
+重启正式 GIMP，验收脚本与插件均从安装目录加载模块。
+三个实际注册的 PDB 过程载入同一份配置文件，均返回 `SUCCESS`：
+
+| 过程 | seed | 结果尺寸 | 图层偏移 |
+| --- | --- | --- | --- |
+| stable-gimpfusion-txt2img | 76101 | 512×512 | `(0, 0)` |
+| stable-gimpfusion-img2img | 76102 | 512×512 | `(32, 24)` |
+| stable-gimpfusion-inpainting | 76103 | 512×512 | `(32, 24)` |
+
+三项过程的新建配置均选择 `original`，过程参数已采用提示词中的 LoRA 标签。
+面板菜单 `Open generation panel` 注册在 `<Image>/GimpFusion`，安装副本的面板恢复当前文件路径和 seed 76103。
+生成期间图像中的手动附加数据保持保存时的内容。
+
+GIMP 日志包含控件助记符提示和退出阶段的 `gimp_device_info_save_tool` 设备状态断言。
+验收批处理执行成功。本次 Forge 服务已终止，电脑操控会话已关闭。
+
 ## 检查
 
 GIMP Python 运行 31 项 unittest，全部通过。修改的 14 个 Python 文件通过 Ruff 和 mypy。
