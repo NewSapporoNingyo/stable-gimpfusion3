@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: stable-gimpfusion3 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-03 15:44+0900\n"
+"POT-Creation-Date: 2026-11-03 19:20+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,12 +21,12 @@ msgstr ""
 msgid "Seed must be an integer from -1 to 4294967295"
 msgstr ""
 
-#: sg_generation.py:34 sg_plugins/generation_base.py:365
+#: sg_generation.py:34 sg_plugins/generation_base.py:444
 msgid "Width and height must be positive multiples of 8"
 msgstr ""
 
-#: sg_loras.py:28 sg_plugins/generation_base.py:90
-#: sg_plugins/generation_base.py:94
+#: sg_loras.py:28 sg_plugins/generation_base.py:129
+#: sg_plugins/generation_base.py:133
 #, python-brace-format
 msgid "Invalid preset field: {field}"
 msgstr ""
@@ -133,155 +133,172 @@ msgid ""
 "Convert current layer to ControlNet layer or edit ControlNet Layer's options"
 msgstr ""
 
-#: sg_plugins/generation_base.py:57
+#: sg_plugins/generation_base.py:68
+msgid "Target image closed; task finished"
+msgstr ""
+
+#: sg_plugins/generation_base.py:96
 msgid "Generation mode"
 msgstr ""
 
-#: sg_plugins/generation_base.py:62 sg_proc_arguments.py:15
+#: sg_plugins/generation_base.py:101 sg_proc_arguments.py:15
 #: sg_proc_arguments.py:314
 msgid "Model"
 msgstr ""
 
-#: sg_plugins/generation_base.py:62 sg_proc_arguments.py:16
+#: sg_plugins/generation_base.py:101 sg_proc_arguments.py:16
 msgid "Model to use for inference"
 msgstr ""
 
-#: sg_plugins/generation_base.py:99
+#: sg_plugins/generation_base.py:138
 #, python-brace-format
 msgid "Unavailable preset option: {field} = {value}"
 msgstr ""
 
-#: sg_plugins/generation_base.py:160 sg_plugins/generation_base.py:510
+#: sg_plugins/generation_base.py:199 sg_plugins/generation_base.py:599
 msgid "Select a ControlNet input layer from the current image"
 msgstr ""
 
-#: sg_plugins/generation_base.py:173
+#: sg_plugins/generation_base.py:218 sg_plugins/panel.py:288
+#: sg_plugins/panel.py:289
 msgid "Generating image"
 msgstr ""
 
-#: sg_plugins/generation_base.py:181
+#: sg_plugins/generation_base.py:225 sg_plugins/panel.py:319
 #, python-brace-format
 msgid "Progress: {progress}%, ETA: {eta}s"
 msgstr ""
 
-#: sg_plugins/generation_base.py:187
+#: sg_plugins/generation_base.py:231
 msgid "Inserting layers from response"
 msgstr ""
 
-#: sg_plugins/generation_base.py:210
+#: sg_plugins/generation_base.py:251 sg_plugins/panel.py:90
 msgid "GimpFusion generation"
 msgstr ""
 
-#: sg_plugins/generation_base.py:211
+#: sg_plugins/generation_base.py:252 sg_plugins/panel.py:196
 msgid "Generate"
 msgstr ""
 
-#: sg_plugins/generation_base.py:222 sg_plugins/generation_base.py:465
+#: sg_plugins/generation_base.py:276 sg_plugins/generation_base.py:554
 msgid "Save preset"
 msgstr ""
 
-#: sg_plugins/generation_base.py:223 sg_plugins/generation_base.py:464
+#: sg_plugins/generation_base.py:277 sg_plugins/generation_base.py:553
 msgid "Save preset as"
 msgstr ""
 
-#: sg_plugins/generation_base.py:225
+#: sg_plugins/generation_base.py:280
 msgid "Load preset"
 msgstr ""
 
-#: sg_plugins/generation_base.py:228
+#: sg_plugins/generation_base.py:283
 msgid "Delete preset"
 msgstr ""
 
-#: sg_plugins/generation_base.py:251
+#: sg_plugins/generation_base.py:307
+msgid "Preset actions"
+msgstr ""
+
+#: sg_plugins/generation_base.py:310
 msgid "Input source"
 msgstr ""
 
-#: sg_plugins/generation_base.py:297 sg_proc_arguments.py:274
+#: sg_plugins/generation_base.py:337
+msgid "Generation parameters"
+msgstr ""
+
+#: sg_plugins/generation_base.py:358 sg_proc_arguments.py:274
 msgid "Inpaint area"
 msgstr ""
 
-#: sg_plugins/generation_base.py:297
+#: sg_plugins/generation_base.py:358
 msgid "Only masked"
 msgstr ""
 
-#: sg_plugins/generation_base.py:297
+#: sg_plugins/generation_base.py:358
 msgid "Whole picture"
 msgstr ""
 
-#: sg_plugins/generation_base.py:307
+#: sg_plugins/generation_base.py:368
 #, python-brace-format
 msgid "ControlNet {slot} parameters"
 msgstr ""
 
-#: sg_plugins/generation_base.py:311
+#: sg_plugins/generation_base.py:372
 msgid "Read layer settings"
 msgstr ""
 
-#: sg_plugins/generation_base.py:337
+#: sg_plugins/generation_base.py:415
 #, python-brace-format
 msgid "Current preset: {name}"
 msgstr ""
 
-#: sg_plugins/generation_base.py:338
+#: sg_plugins/generation_base.py:416
 msgid "Unsaved parameters"
 msgstr ""
 
-#: sg_plugins/generation_base.py:393
+#: sg_plugins/generation_base.py:474
 #, python-brace-format
 msgid ""
 "Request: {width} x {height}; insertion area: {area_width} x {area_height}"
 msgstr ""
 
-#: sg_plugins/generation_base.py:409
+#: sg_plugins/generation_base.py:482
+msgid "Select a target image"
+msgstr ""
+
+#: sg_plugins/generation_base.py:498
 #, python-brace-format
 msgid "Target image: {name}"
 msgstr ""
 
-#: sg_plugins/generation_base.py:411
+#: sg_plugins/generation_base.py:500
 #, python-brace-format
 msgid "Selection: ({x}, {y}), {width} x {height}"
 msgstr ""
 
-#: sg_plugins/generation_base.py:413
+#: sg_plugins/generation_base.py:502
 msgid "Selection: whole image"
 msgstr ""
 
-#: sg_plugins/generation_base.py:417
+#: sg_plugins/generation_base.py:506
 #, python-brace-format
 msgid "Source layer: {name}"
 msgstr ""
 
-#: sg_plugins/generation_base.py:418
+#: sg_plugins/generation_base.py:507
 #, python-brace-format
 msgid "Source: {width} x {height}; offset: ({x}, {y})"
 msgstr ""
 
-#: sg_plugins/generation_base.py:426
+#: sg_plugins/generation_base.py:515
 msgid "Current selection"
 msgstr ""
 
-#: sg_plugins/generation_base.py:426
+#: sg_plugins/generation_base.py:515
 msgid "Source layer mask"
 msgstr ""
 
-#: sg_plugins/generation_base.py:426
+#: sg_plugins/generation_base.py:515
 msgid "Create a mask"
 msgstr ""
 
-#: sg_plugins/generation_base.py:427
+#: sg_plugins/generation_base.py:516
 #, python-brace-format
 msgid "Mask source: {name}"
 msgstr ""
 
-#: sg_plugins/generation_base.py:465
+#: sg_plugins/generation_base.py:554
 msgid "Cancel"
 msgstr ""
 
-#: sg_plugins/generation_base.py:476
+#: sg_plugins/generation_base.py:565
 msgid "Enter a preset name"
 msgstr ""
 
-#: sg_plugins/generation_base.py:479
+#: sg_plugins/generation_base.py:568
 msgid "Preset name already exists"
 msgstr ""
 
@@ -333,29 +350,102 @@ msgstr ""
 msgid "Alias"
 msgstr ""
 
-#: sg_plugins/lora_selector.py:61
+#: sg_plugins/lora_selector.py:63
 msgid "LoRA details"
 msgstr ""
 
-#: sg_plugins/lora_selector.py:66
+#: sg_plugins/lora_selector.py:68
 msgid "Final LoRA tags"
 msgstr ""
 
-#: sg_plugins/lora_selector.py:139
+#: sg_plugins/lora_selector.py:142
 msgid "Enabled"
 msgstr ""
 
-#: sg_plugins/lora_selector.py:143
+#: sg_plugins/lora_selector.py:146
 #, python-brace-format
 msgid "Alias: {alias}"
 msgstr ""
 
-#: sg_plugins/lora_selector.py:147 sg_proc_arguments.py:321
+#: sg_plugins/lora_selector.py:152 sg_proc_arguments.py:321
 msgid "Weight"
 msgstr ""
 
-#: sg_plugins/lora_selector.py:151
+#: sg_plugins/lora_selector.py:156
 msgid "Remove"
+msgstr ""
+
+#: sg_plugins/panel.py:35
+msgid "Open generation panel"
+msgstr ""
+
+#: sg_plugins/panel.py:36
+msgid "Open the persistent GimpFusion generation window"
+msgstr ""
+
+#: sg_plugins/panel.py:96
+msgid "Connecting to Forge"
+msgstr ""
+
+#: sg_plugins/panel.py:176
+msgid "Target image"
+msgstr ""
+
+#: sg_plugins/panel.py:189
+msgid "Show a system notification after generation"
+msgstr ""
+
+#: sg_plugins/panel.py:197
+msgid "Close"
+msgstr ""
+
+#: sg_plugins/panel.py:254 sg_plugins/panel.py:409
+msgid "Closing panel"
+msgstr ""
+
+#: sg_plugins/panel.py:258
+msgid "Generation is busy or needs input"
+msgstr ""
+
+#: sg_plugins/panel.py:344 sg_plugins/panel.py:345 sg_plugins/panel.py:349
+#: sg_plugins/panel.py:350
+msgid "Generation interrupted"
+msgstr ""
+
+#: sg_plugins/panel.py:353 sg_plugins/panel.py:359
+msgid "GimpFusion generation finished"
+msgstr ""
+
+#: sg_plugins/panel.py:354
+#, python-brace-format
+msgid "Inserted {count} candidates into {name}"
+msgstr ""
+
+#: sg_plugins/panel.py:360
+#, python-brace-format
+msgid "{name}: {count} candidates"
+msgstr ""
+
+#: sg_plugins/panel.py:363
+msgid "Generation failed"
+msgstr ""
+
+#: sg_plugins/panel.py:373
+#, python-brace-format
+msgid "Notification failed with exit code {code}"
+msgstr ""
+
+#: sg_plugins/panel.py:375
+msgid "Notification timed out"
+msgstr ""
+
+#: sg_plugins/panel.py:377
+#, python-brace-format
+msgid "Notification failed: {error}"
+msgstr ""
+
+#: sg_plugins/panel.py:409
+msgid "Interrupting generation"
 msgstr ""
 
 #: sg_plugins/txt2img.py:7

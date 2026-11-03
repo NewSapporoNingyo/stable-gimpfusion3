@@ -16,7 +16,7 @@ def add_textarea_to_container(
     container: Gtk.Container,
 ) -> None:
     prompt_w = Gtk.TextView.new_with_buffer(GimpUi.prop_text_buffer_new(config, argument_name, 0))
-    prompt_w.set_wrap_mode(Gtk.WrapMode.WORD)
+    prompt_w.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
     label = Gtk.Label(_(procedure.find_argument(argument_name).nick))
     label.set_halign(Gtk.Align.START)
     container.add(label)

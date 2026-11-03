@@ -22,6 +22,13 @@ STABLE_GIMPFUSION_DEFAULT_SETTINGS = {
     "cn_models": [],
     "sd_model_checkpoint": None,
     "is_server_running": False,
+    "panel_state": {
+        "parameters": None,
+        "preset": "",
+        "width": 480,
+        "height": 800,
+        "notification_toast": True,
+    },
 }
 
 RESIZE_MODES = [

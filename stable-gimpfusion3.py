@@ -15,6 +15,7 @@ from sg_plugins.config_controlnet import ConfigControlnetLayerPlugin
 from sg_plugins.img2img import Image2imagePlugin
 from sg_plugins.inpainting import InpaintingPlugin
 from sg_plugins.layerinfo import LayerInfoPlugin
+from sg_plugins.panel import PANEL_PROCEDURE, PanelPlugin
 from sg_plugins.txt2img import Txt2imagePlugin
 
 gi.require_version("Gimp", "3.0")
@@ -44,19 +45,14 @@ MODULES: dict[str, PluginBase] = {
     "stable-gimpfusion-inpainting": InpaintingPlugin(api=api, settings=settings),
     "stable-gimpfusion-config-controlnet-layer": ConfigControlnetLayerPlugin(api=api, settings=settings),
     "stable-gimpfusion-layer-info": LayerInfoPlugin(api=api, settings=settings),
+    PANEL_PROCEDURE: PanelPlugin(api=api, settings=settings),
 }
 
 
 class GimpfusionPlugin(Gimp.PlugIn):
     def __init__(self):
         super().__init__()
-        self.connection_error = ""
-        try:
-            options = fetch_stablediffusion_options(api=api)
-            settings.save(options)
-        except (requests.ConnectionError, requests.Timeout) as error:
-            self.connection_error = str(error)
-            settings.save({"is_server_running": False})
+        self.options_loaded = False
 
     def do_set_i18n(self, name: str) -> str:
         return DOMAIN
@@ -65,19 +61,16 @@ class GimpfusionPlugin(Gimp.PlugIn):
         return list(MODULES.keys())
 
     def do_create_procedure(self, name: str) -> Gimp.Procedure:
-        # GIMP initializes the PDB after constructing the plug-in.
-        if self.connection_error:
-            Gimp.message(self.connection_error)
-            self.connection_error = ""
         module = MODULES[name]
+        if name != PANEL_PROCEDURE and not self.options_loaded:
+            try:
+                settings.save(fetch_stablediffusion_options(api))
+            except (requests.ConnectionError, requests.Timeout) as error:
+                Gimp.message(str(error))
+                settings.save({"is_server_running": False})
+            self.options_loaded = True
 
-        procedure = Gimp.ImageProcedure.new(
-            self,
-            name,
-            Gimp.PDBProcType.PLUGIN,
-            module.main,
-            None,
-        )
+        procedure = Gimp.ImageProcedure.new(self, name, Gimp.PDBProcType.PLUGIN, module.main, None)
 
         procedure.set_image_types("*")
         procedure.set_sensitivity_mask(module.sensitivity_mask)

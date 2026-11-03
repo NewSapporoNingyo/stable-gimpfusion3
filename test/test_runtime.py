@@ -109,7 +109,7 @@ class RuntimeTests(unittest.TestCase):
             assert released.wait(2)
             if generation_failure:
                 raise requests.ConnectionError("generation failed")
-            return {"images": []}
+            return {"images": [], "info": json.dumps({"all_seeds": []})}
 
         def progress(*_args, **_kwargs):
             assert threading.current_thread() is main_thread
@@ -126,6 +126,7 @@ class RuntimeTests(unittest.TestCase):
             patch("sg_plugins.generation_base.Gimp.progress_update") as update,
             patch("sg_plugins.generation_base.Gimp.progress_set_text"),
             patch("sg_plugins.generation_base.Gimp.message") as message,
+            patch("sg_plugins.generation_base.Gimp.displays_flush"),
             patch("sg_plugins.generation_base.ResponseLayers") as layers,
         ):
             if generation_failure:
