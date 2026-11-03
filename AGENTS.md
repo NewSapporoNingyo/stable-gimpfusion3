@@ -41,6 +41,7 @@
 - 无休止的反复测试与日志检查、在工作区中添加不必要的垃圾文件。
 - 堆砌难以理解意义的句子、将用户撰写的通俗易懂且语言风格贴近日常的说明重写成难以理解的内容。
 - 无视用户与计划文档中对任务的具体需求，执行在任务中明显多余的操作。
+- 以“某段代码看上去不够安全”等理由将原有代码大规模重写、添加大量多余保护逻辑。
 
 ## 目录与文件
 
@@ -95,6 +96,8 @@ git -C "C:\Users\LHR\AppData\Roaming\GIMP\3.2\plug-ins\stable-gimpfusion3" pull 
 - 当在codex中需要使用computer use（电脑操控）时，注意本设备上的computer use的窗口截图功能存在问题，必要时需使用全屏截图。
 - 每次开发任务结束后注意终止webui forge实例，避免其留存在agent内置终端中持续占用系统资源。
 - 确保插件内界面操作与代码实现接近webui forge中的逻辑，不得自行编造与webui不同或矛盾的新操作逻辑。本机webui在`C:\data\webui_forge_dev\stable-diffusion-webui-forge`目录下。
+- 代码实现遵循最简洁、改动最小、性能最高的原则。若有某项功能可以使用成熟的标准库实现，应引入标准库而不是维护自制工具。
+
 ## 提交信息
 
 修改代码后，提供英文提交信息，格式为 `Change Type: What was done`。类型可使用 `Fix`、`Feat`、`Refactor`、`Docs`、`Test` 或 `Chore`，冒号后直接说明完成的改动。
