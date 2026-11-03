@@ -5,6 +5,7 @@ import logging
 from typing import Any
 
 import gi
+import requests
 
 from sg_gtk_utils import add_textarea_to_container
 from sg_i18n import _
@@ -178,22 +179,16 @@ class ConfigModelPlugin(PluginBase):
             elif flux_encoders_mode == "Never add":
                 data["forge_additional_modules"] = []
 
-        if self.settings.get("model") != model:
-            Gimp.progress_init("")
-            Gimp.progress_set_text(_("Changing model..."))
-
-            try:
-                # self.api.post("/sdapi/v1/options", {"sd_model_checkpoint": models[model]})
-                self.api.post("/sdapi/v1/options", data=data)
-                self.settings.set("sd_model_checkpoint", model)
-            except Exception as e:
-                logging.exception(f"Error changing model: {e}")
-
-                return procedure.new_return_values(
-                    Gimp.PDBStatusType.CALLING_ERROR,
-                    GLib.Error(message=str(e)),
-                )
-
+        Gimp.progress_init("")
+        Gimp.progress_set_text(_("Changing model..."))
+        try:
+            self.api.post("/sdapi/v1/options", data=data)
+            self.settings.set("sd_model_checkpoint", model)
+        except (requests.RequestException, OSError) as error:
+            return procedure.new_return_values(
+                Gimp.PDBStatusType.CALLING_ERROR, GLib.Error(message=str(error)),
+            )
+        finally:
             Gimp.progress_end()
 
         return procedure.new_return_values(Gimp.PDBStatusType.SUCCESS, GLib.Error())

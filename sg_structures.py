@@ -1,92 +1,34 @@
 from __future__ import annotations
 
 import base64
-import contextlib
 import json
 import logging
 import os
 import tempfile
 
-from typing import Any, ClassVar, Literal
+from typing import Any
 
 import gi
 import requests
 
-from sg_constants import CONTROLNET_DEFAULT_SETTINGS, INSERT_MODES
+from sg_constants import INSERT_MODES
+from sg_generation import aspect_resize
 from sg_sources import PixelSnapshot
 
 gi.require_version("Gimp", "3.0")
 gi.require_version("Gegl", "0.4")
 from gi.repository import Gegl, Gimp, Gio
 
-from sg_utils import aspect_resize, roundToMultiple
-
-# Global reference to settings (set during plugin initialization)
-_global_settings = None
-
-
-
-class TempFiles:
-    """Context manager for temporary files with automatic cleanup"""
-
-    instance: ClassVar[TempFiles]
-
-    def __new__(cls) -> TempFiles:
-        if not hasattr(cls, "instance"):
-            cls.instance = super().__new__(cls)
-        return cls.instance
-
-    def __init__(self) -> None:
-        self.files: list[str] = []
-
-    def __enter__(self) -> TempFiles:
-        return self
-
-    def __exit__(
-        self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: Any,
-    ) -> Literal[False]:
-        self.removeAll()
-        return False
-
-    def __del__(self):
-        """Cleanup on deletion"""
-        with contextlib.suppress(Exception):
-            self.removeAll()
-
-    def get(self, filename: str) -> str:
-        self.files.append(filename)
-        return os.path.join(tempfile.gettempdir(), filename)
-
-    def removeAll(self) -> None:
-        try:
-            unique_list = list(set(self.files))
-            for tmpfile in unique_list:
-                if os.path.exists(tmpfile):
-                    os.remove(tmpfile)
-        except Exception as ex:
-            logging.exception(f"Error removing temporary file: {ex}")
-
 
 class LayerData:
-    def __init__(self, layer: Gimp.Layer, defaults: dict[str, Any] | None = None) -> None:
-        if defaults is None:
-            defaults = {}
+    def __init__(self, layer: Gimp.Layer) -> None:
         self.name = "gimpfusion"
         self.layer = layer
-        self.image = layer.get_image()
-        self.defaults = defaults
-        self.had_parasite = False
         self.load()
 
     def load(self) -> dict[str, Any]:
-        # Gimp Item get_parasite
         parasite = self.layer.get_parasite(self.name)
-        if not parasite:
-            self.data = self.defaults.copy()
-        else:
-            self.had_parasite = True
-            # TODO bytes to str
-            self.data = json.loads("".join(chr(x) for x in parasite.get_data()))
+        self.data: dict[str, Any] = {} if parasite is None else json.loads(bytes(parasite.get_data()))
         return self.data
 
     def save(self, data: dict[str, Any]) -> None:
@@ -95,31 +37,24 @@ class LayerData:
         self.layer.attach_parasite(parasite)
 
 
-# GLOBALS
 layer_counter = 1
 
 
 class Layer:
-    def __init__(self, layer=None):
+    def __init__(self, layer: Gimp.Layer) -> None:
         global layer_counter
         self.id = layer_counter
-        layer_counter = layer_counter + 1
-        if layer is not None:
-            self.layer = layer
-            self.image = layer.get_image()
+        layer_counter += 1
+        self.layer = layer
 
     @staticmethod
-    def create(image, name, width, height, image_type, opacity, mode):
-        layer = Gimp.Layer.new(image, name, width, height, image_type, opacity, mode)
-        return Layer(layer)
-
-    @staticmethod
-    def fromBase64(img, base64Data):
-        filepath = TempFiles().get("generated.png")
-        with open(filepath, "wb+") as imageFile:
-            imageFile.write(base64.b64decode(base64Data))
-        layer = Gimp.file_load_layer(Gimp.RunMode.NONINTERACTIVE, img, Gio.File.new_for_path(filepath))
-        return Layer(layer)
+    def fromBase64(img: Gimp.Image, base64Data: str) -> Layer:
+        with tempfile.TemporaryDirectory(prefix="gimpfusion-") as directory:
+            filepath = os.path.join(directory, "generated.png")
+            with open(filepath, "wb") as image_file:
+                image_file.write(base64.b64decode(base64Data))
+            layer = Gimp.file_load_layer(Gimp.RunMode.NONINTERACTIVE, img, Gio.File.new_for_path(filepath))
+            return Layer(layer)
 
     def rename(self, name):
         self.layer.set_name(name)
@@ -129,202 +64,61 @@ class Layer:
         LayerData(self.layer).save(data)
         return self
 
-    def loadData(self, default_data):
-        return LayerData(self.layer, default_data).data.copy()
-
-    def copy(self):
-        copy = self.layer.copy()
-        return Layer(copy)
-
-    def scale(self, new_scale=1.0):
-        if new_scale != 1.0:
-            self.layer.scale(int(new_scale * self.layer.width), int(new_scale * self.layer.height), False)
-        return self
-
     def resize(self, width, height):
         logging.info("Resizing to %dx%d", width, height)
         self.layer.scale(width, height, False)
-
-    def resizeToMultipleOf(self, multiple):
-        self.layer.scale(
-            roundToMultiple(self.layer.width, multiple),
-            roundToMultiple(self.layer.height, multiple),
-            False,
-        )
-        return self
 
     def translate(self, offset=None):
         if offset is not None:
             self.layer.set_offsets(offset[0], offset[1])
         return self
 
-    def insert(self):
-        self.image.insert_layer(self.layer, None, -1)
-        return self
-
-    def insertTo(self, image=None):
-        image = image or self.image
+    def insertTo(self, image: Gimp.Image) -> Layer:
         image.insert_layer(self.layer, None, -1)
-        return self
-
-    def addSelectionAsMask(self):
-        mask = self.layer.create_mask(Gimp.AddMaskType.SELECTION)
-        self.layer.add_mask(mask)
-        return self
-
-    def saveMaskAs(self, filepath):
-        logging.debug(f"saveMaskAs {filepath=}")
-        new_image = Gimp.Image.new(self.layer.get_width(), self.layer.get_height(), Gimp.ImageBaseType.RGB)
-        layer = Gimp.Layer.new_from_drawable(self.layer.get_mask(), new_image)
-        new_image.insert_layer(layer, None, -1)
-        Gimp.file_save(Gimp.RunMode.NONINTERACTIVE, new_image, Gio.File.new_for_path(filepath), None)
-        return self
-
-    def saveAs(self, filepath):
-        logging.debug(f"saveAs {filepath=}")
-        new_image = Gimp.Image.new(self.layer.get_width(), self.layer.get_height(), Gimp.ImageBaseType.RGB)
-        try:
-            layer = Gimp.Layer.new_from_drawable(self.layer, new_image)
-            new_image.insert_layer(layer, None, -1)
-            Gimp.file_save(Gimp.RunMode.NONINTERACTIVE, new_image, Gio.File.new_for_path(filepath), None)
-        finally:
-            new_image.delete()
-        return self
-
-    def maskToBase64(self) -> str:
-        return PixelSnapshot.read_mask(self.layer.get_mask()).to_base64(
-            cache_enabled=self._is_cache_enabled(),
-        )
-
-    def toBase64(self) -> str:
-        return PixelSnapshot.read(self.layer).to_base64(cache_enabled=self._is_cache_enabled())
-
-    @staticmethod
-    def clear_toBase64_cache() -> None:
-        PixelSnapshot.cache.clear()
-
-    @staticmethod
-    def set_global_settings(settings: MyShelf) -> None:
-        global _global_settings
-        _global_settings = settings
-
-    @staticmethod
-    def _is_cache_enabled() -> bool:
-        return _global_settings is None or bool(_global_settings.get("cache_tobase64", True))
-
-    def remove(self):
-        self.layer.get_image().remove_layer(self.layer)
         return self
 
 
 class ResponseLayers:
     def __init__(self, img: Gimp.Image, response: dict[str, Any], options: dict[str, Any] | None = None) -> None:
         if options is None:
-            options = {}
-        self.image = img
-        color = Gimp.context_get_foreground()
-        Gimp.context_set_foreground(Gegl.Color.new("#000000"))
-
-        layers = []
-        try:
-            """
-            response["parameters"]
-            {
-            'prompt': 'beauty, good skin, sharp skin, ultra detailed skin, high quality, RAW photo, analog film,
-            35mm photograph, 32K UHD, close-up, ultra realistic, clean',
-            'negative_prompt': '(deformed, distorted, disfigured:1.3), poorly drawn, bad anatomy, wrong anatomy,
-            extra limb, missing limb, floating limbs, (mutated hands and fingers:1.4), disconnected limbs, mutation,
-            mutated, ugly, disgusting, blurry, amputation',
-            'styles': None, 'seed': 1, 'subseed': -1, 'subseed_strength': 0, 'seed_resize_from_h': -1,
-            'seed_resize_from_w': -1, 'sampler_name': None, 'scheduler': None, 'batch_size': 1, 'n_iter': 1,
-            'steps': 20, 'cfg_scale': 7.0, 'distilled_cfg_scale': 3.5, 'width': 2000, 'height': 3000,
-            'restore_faces': False, 'tiling': False, 'do_not_save_samples': False, 'do_not_save_grid': False,
-            'eta': None, 'denoising_strength': 0.75, 's_min_uncond': None, 's_churn': None, 's_tmax': None,
-            's_tmin': None, 's_noise': None, 'override_settings': None, 'override_settings_restore_afterwards': True,
-            'refiner_checkpoint': None, 'refiner_switch_at': None, 'disable_extra_networks': False,
-            'firstpass_image': None, 'comments': None, 'init_images': None, 'resize_mode': 0, 'image_cfg_scale': None,
-            'mask': None, 'mask_blur_x': 4, 'mask_blur_y': 4, 'mask_blur': 4, 'mask_round': True, 'inpainting_fill': 0,
-            'inpaint_full_res': True, 'inpaint_full_res_padding': 0, 'inpainting_mask_invert': 0,
-            'initial_noise_multiplier': None, 'latent_mask': None, 'force_task_id': None, 'hr_distilled_cfg': 3.5,
-            'sampler_index': 'Euler', 'include_init_images': False, 'script_name': None, 'script_args': [],
-            'send_images': True, 'save_images': False, 'alwayson_scripts': {'never oom integrated': {
-            'args': [True, True]}, 'multidiffusion integrated': {'args': [True, 'MultiDiffusion', 768, 768, 64, 64]}},
-            'infotext': None}
-            """
-            info = json.loads(response["info"])
-            infotexts = info["infotexts"]
-            seeds = info["all_seeds"]
-            self.generated_width = info["width"]
-            self.generated_height = info["height"]
-            logging.debug(f"{infotexts=}")
-            logging.debug(f"{seeds=}")
-            total_images = len(seeds)
-            for index, image in enumerate(response["images"]):
-                layer = None
-                if index < total_images:
-                    layer_data = {"info": infotexts[index], "seed": seeds[index]}
-                    layer = (
-                        Layer.fromBase64(img, image)
-                        .rename(f"Generated Layer {seeds[index]}")
-                        .saveData(layer_data)
-                        .insertTo(img)
-                        .saveAs(TempFiles().get(f"result{index}.png"))
-                    )
-                elif "skip_annotator_layers" in options and not options["skip_annotator_layers"]:
-                    # annotator layers
-                    layer = (
-                        Layer.fromBase64(img, image)
-                        .rename("Annotator Layer")
-                        .insertTo(img)
-                        .saveAs(TempFiles().get("AnnotatorLayer.png"))
-                    )
-                if layer:
-                    layers.append(layer.layer)
-        finally:
-            Gimp.context_set_foreground(color)
-        self.layers = layers
-
-    def scale(self, new_scale: float = 1.0) -> ResponseLayers:
-        if new_scale != 1.0:
-            for layer in self.layers:
-                Layer(layer).scale(new_scale)
-        return self
+            options = {"skip_annotator_layers": True}
+        info = json.loads(response["info"])
+        infotexts = info["infotexts"]
+        seeds = info["all_seeds"]
+        self.generated_width = info["width"]
+        self.generated_height = info["height"]
+        self.layers: list[Gimp.Layer] = []
+        for index, image in enumerate(response["images"]):
+            if index >= len(seeds) and options["skip_annotator_layers"]:
+                continue
+            layer = Layer.fromBase64(img, image)
+            if index < len(seeds):
+                layer.rename(f"Generated Layer {seeds[index]}").saveData({
+                    "info": infotexts[index], "seed": seeds[index],
+                })
+            else:
+                layer.rename("Annotator Layer")
+            layer.insertTo(img)
+            self.layers.append(layer.layer)
 
     def resize(self, width: int, height: int, strategy: str = INSERT_MODES[0]) -> ResponseLayers:
-        if strategy not in INSERT_MODES:
-            strategy = INSERT_MODES[0]
-
         if strategy == "Resize to selection":
-            for layer in self.layers:
-                Layer(layer).resize(width, height)
-            return self
-
-        # elif strategy in ("Insert as is", "Use selection size"):
-        #     return self
+            size = width, height
         elif strategy in ("Aspect fill", "Aspect fit"):
-            w, h = aspect_resize(
-                selection_width=width,
-                selection_height=height,
-                image_width=self.generated_width,
-                image_height=self.generated_height,
+            size = aspect_resize(
+                (width, height), (self.generated_width, self.generated_height),
                 fill=strategy == "Aspect fill",
             )
-            for layer in self.layers:
-                Layer(layer).resize(w, h)
+        else:
             return self
-
+        for layer in self.layers:
+            Layer(layer).resize(*size)
         return self
 
     def translate(self, offset: tuple[int, int] | None = None) -> ResponseLayers:
         if offset is not None:
             for layer in self.layers:
                 Layer(layer).translate(offset)
-        return self
-
-    def insertTo(self, image: Gimp.Image | None = None) -> ResponseLayers:
-        image = image or self.image
-        for layer in self.layers:
-            Layer(layer).insertTo(image)
         return self
 
     def addSelectionAsMask(self, selection: PixelSnapshot | None) -> ResponseLayers:
@@ -379,7 +173,6 @@ class MyShelf:
         self.save()
 
     def get(self, name, default_value=None):
-        # return self.data[name] if name in self.data else default_value
         return self.data.get(name, default_value)
 
     def set(self, name, default_value=None):
@@ -390,66 +183,30 @@ class MyShelf:
 class ApiClient:
     """Simple API client used to interface with StableDiffusion JSON endpoints"""
 
-    def __init__(self, base_url, timeout=300):
-        self.setBaseUrl(base_url)
+    def __init__(self, base_url: str, timeout: float = 300) -> None:
+        self.base_url = base_url.strip("/")
         self.timeout = timeout
 
-    def setBaseUrl(self, base_url):
-        self.base_url = base_url.strip("/")
+    def post(
+        self, endpoint: str, data: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None, headers: dict[str, str] | None = None,
+    ) -> Any:
+        url = self.base_url + endpoint
+        headers = headers or {"Content-Type": "application/json", "Accept": "application/json"}
+        logging.debug(f"POST {url}, data {data.keys() if data else None}")
+        response = requests.post(url=url, params=params, headers=headers, json=data, timeout=self.timeout)
+        response.raise_for_status()
+        return response.json()
 
-    def post(self, endpoint, data=None, params=None, headers=None):
-        try:
-            url = self.base_url + endpoint
-            headers = headers or {"Content-Type": "application/json", "Accept": "application/json"}
-
-            logging.debug(f"POST {url}, data {data.keys() if data else None}")
-
-            response = requests.post(url=url, params=params, headers=headers, json=data, timeout=self.timeout)
-            response.raise_for_status()
-            data = response.json()
-            # response.raise_for_status()
-            return data
-        except requests.exceptions.Timeout:
-            logging.error(f"Timeout while POSTing to {endpoint}")
-            raise
-        except requests.exceptions.RequestException as ex:
-            logging.exception(f"ERROR: ApiClient.post to {endpoint}: {ex}")
-            raise
-        except Exception as ex:
-            logging.exception(f"ERROR: ApiClient.post unexpected error to {endpoint}: {ex}")
-            raise
-
-    def get(self, endpoint, params=None, headers=None):
-        try:
-            url = self.base_url + endpoint
-            logging.debug(f"GET {url}")
-            headers = headers or {"Content-Type": "application/json", "Accept": "application/json"}
-
-            response = requests.get(url=url, params=params, headers=headers, timeout=self.timeout)
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.Timeout:
-            logging.error(f"Timeout while GETting {endpoint}")
-            raise
-        except requests.exceptions.RequestException as ex:
-            logging.exception(f"ERROR: ApiClient.get from {endpoint}: {ex}")
-            raise
-        except Exception as ex:
-            logging.exception(f"ERROR: ApiClient.get unexpected error to {endpoint}: {ex}")
-            raise
-
-
-def getControlNetParams(cn_layer):
-    if not cn_layer:
-        return None
-
-    layer = Layer(cn_layer)
-    data = layer.loadData(CONTROLNET_DEFAULT_SETTINGS)
-    # ControlNet image size need to be in multiples of 64
-    layer64 = layer.copy().insert().resizeToMultipleOf(64)
-    data.update({"input_image": layer64.toBase64()})
-    # if cn_layer.mask:
-    if cn_layer.get_mask():
-        data.update({"mask": layer64.maskToBase64()})
-    layer64.remove()
-    return data
+    def get(
+        self, endpoint: str, params: dict[str, Any] | None = None, headers: dict[str, str] | None = None,
+        *, timeout: float | None = None,
+    ) -> Any:
+        url = self.base_url + endpoint
+        headers = headers or {"Content-Type": "application/json", "Accept": "application/json"}
+        logging.debug(f"GET {url}")
+        response = requests.get(
+            url=url, params=params, headers=headers, timeout=self.timeout if timeout is None else timeout,
+        )
+        response.raise_for_status()
+        return response.json()

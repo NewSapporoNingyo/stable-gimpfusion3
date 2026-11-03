@@ -99,6 +99,9 @@ class PresetTests(unittest.TestCase):
         assert generation_size(values, (383, 259)) == (384, 256)
         selection = build_request(values, "", "", (383, 259), catalog)
         assert (selection["width"], selection["height"]) == (384, 256)
+        for tiny_selection in ((1, 1), (4, 64), (64, 4)):
+            with self.assertRaisesRegex(ValueError, "positive multiples of 8"):  # noqa: PT027
+                build_request(values, "", "", tiny_selection, catalog)
         values.update(width=512, height=384)
         values["generation_mode"] = "img2img"
         image = build_request(values, "", "", (383, 259), catalog)

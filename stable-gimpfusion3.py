@@ -6,6 +6,7 @@ import os
 import sys
 
 import gi
+import requests
 
 from sg_i18n import DOMAIN
 from sg_plugins import PluginBase
@@ -26,7 +27,7 @@ from sg_constants import (
     AUTHOR,
     STABLE_GIMPFUSION_DEFAULT_SETTINGS,
 )
-from sg_structures import ApiClient, Layer, MyShelf
+from sg_structures import ApiClient, MyShelf
 from sg_utils import fetch_stablediffusion_options, set_logging_dest
 
 settings = MyShelf(STABLE_GIMPFUSION_DEFAULT_SETTINGS)
@@ -49,15 +50,13 @@ MODULES: dict[str, PluginBase] = {
 class GimpfusionPlugin(Gimp.PlugIn):
     def __init__(self):
         super().__init__()
-
+        self.connection_error = ""
         try:
             options = fetch_stablediffusion_options(api=api)
             settings.save(options)
-        except Exception:
-            logging.exception("ERROR: DynamicDropdownData.fetch")
+        except (requests.ConnectionError, requests.Timeout) as error:
+            self.connection_error = str(error)
             settings.save({"is_server_running": False})
-
-        Layer.set_global_settings(settings)
 
     def do_set_i18n(self, name: str) -> str:
         return DOMAIN
@@ -66,6 +65,10 @@ class GimpfusionPlugin(Gimp.PlugIn):
         return list(MODULES.keys())
 
     def do_create_procedure(self, name: str) -> Gimp.Procedure:
+        # GIMP initializes the PDB after constructing the plug-in.
+        if self.connection_error:
+            Gimp.message(self.connection_error)
+            self.connection_error = ""
         module = MODULES[name]
 
         procedure = Gimp.ImageProcedure.new(

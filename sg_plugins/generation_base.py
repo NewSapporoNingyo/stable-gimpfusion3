@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import json
 import math
-import threading
 
+from concurrent.futures import ThreadPoolExecutor, wait
 from typing import Any, cast
 
 import gi
@@ -35,8 +35,8 @@ from sg_proc_arguments import (
     PLUGIN_FIELDS_RESIZE_MODE,
 )
 from sg_sources import GenerationSource, PixelSnapshot
-from sg_structures import Layer, LayerData, ResponseLayers
-from sg_utils import get_progress_at_background, make_choice_from_list
+from sg_structures import LayerData, ResponseLayers
+from sg_utils import make_choice_from_list
 
 gi.require_version("Gimp", "3.0")
 gi.require_version("GimpUi", "3.0")
@@ -161,21 +161,29 @@ class GenerationPluginBase(PluginBase):
                 unit = {name: values[f"cn{slot}_{name}"] for name in CONTROLNET_PARAMETERS}
                 unit["resize_mode"] = CONTROLNET_RESIZE_MODES.index(unit["resize_mode"])
                 unit["control_mode"] = CONTROL_MODES.index(unit["control_mode"])
-                unit["image"] = Layer(layer).toBase64()
+                unit["image"] = PixelSnapshot.read(layer).to_base64(cache_enabled=cache_enabled)
                 if layer.get_mask() is not None:
-                    unit["mask_image"] = Layer(layer).maskToBase64()
+                    unit["mask_image"] = PixelSnapshot.read_mask(layer.get_mask()).to_base64(
+                        cache_enabled=cache_enabled,
+                    )
                 units.append(unit)
         if units:
             data["alwayson_scripts"] = {"controlnet": {"args": units}}
         endpoint = "/sdapi/v1/txt2img" if mode == "txt2img" else "/sdapi/v1/img2img"
         Gimp.progress_init(_("Generating image"))
         self.api.post("/sdapi/v1/options", {"sd_model_checkpoint": values["sd_model_checkpoint"]})
-        thread = threading.Thread(target=get_progress_at_background, args=(self.api,), daemon=True)
-        thread.start()
-        try:
-            response = self.api.post(endpoint, data)
-        finally:
-            thread.join()
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            pending = executor.submit(self.api.post, endpoint, data)
+            try:
+                while not wait((pending,), timeout=2).done:
+                    progress = self.api.get("/sdapi/v1/progress", params={"skip_current_image": "true"}, timeout=5)
+                    Gimp.progress_update(progress["progress"])
+                    Gimp.progress_set_text(_("Progress: {progress}%, ETA: {eta}s").format(
+                        progress=round(progress["progress"] * 100, 2), eta=round(progress["eta_relative"]),
+                    ))
+            except requests.RequestException as error:
+                Gimp.message(str(error))
+            response = pending.result()
         Gimp.progress_set_text(_("Inserting layers from response"))
         layers = ResponseLayers(image, response, {"skip_annotator_layers": values["cn_skip_annotator_layers"]})
         if mode == "txt2img":
@@ -349,26 +357,32 @@ class GenerationDialog:
         values = {name: self.config.get_property(name) for name in (
             "generation_mode", "insert_mode", "width", "height", "inpaint_full_res",
         )}
+        dimension_error = ""
         try:
             values["width"], values["height"] = (int(spin.get_text()) for spin in self.dimension_spins)
             validate_dimensions(values["width"], values["height"])
         except ValueError:
-            valid_dimensions = False
-        else:
-            valid_dimensions = True
-        self.dimension_label.set_text(_("Width and height must be multiples of 8"))
-        self.dimension_label.set_visible(not valid_dimensions)
+            dimension_error = _("Width and height must be positive multiples of 8")
+        valid_dimensions = not dimension_error
         valid_loras = not self.loras.invalid_weights
         self.save_button.set_sensitive(bool(self.active_preset) and valid_dimensions and valid_loras)
         self.save_as_button.set_sensitive(valid_dimensions and valid_loras)
+        width, height = generation_size(values, (x2 - x1, y2 - y1))
+        if not use_dimensions:
+            dimension_error = ""
+            try:
+                validate_dimensions(width, height)
+            except ValueError as error:
+                dimension_error = str(error)
+        self.dimension_label.set_text(dimension_error)
+        self.dimension_label.set_visible(bool(dimension_error))
         problem = self.source_error or self.source.problem(mode, self.config.get_property("invert_mask"))
         self.input_label.set_text(problem)
-        self.ready = (valid_dimensions or not use_dimensions) and valid_loras and not problem
+        self.ready = not dimension_error and valid_loras and not problem
         self.dialog.set_response_sensitive(Gtk.ResponseType.OK, self.ready)
-        if use_dimensions and not valid_dimensions:
+        if dimension_error:
             self.size_label.set_text("")
             return
-        width, height = generation_size(values, (x2 - x1, y2 - y1))
         source_size = (
             (self.source.pixels.width, self.source.pixels.height)
             if self.source.pixels is not None else self.source.image_size

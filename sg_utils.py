@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 import os
 import tempfile
-import time
 
 from typing import TYPE_CHECKING, Any
 
@@ -16,15 +15,6 @@ gi.require_version("Gimp", "3.0")
 from gi.repository import Gimp
 
 
-def make_choice_from_dict(data: dict[str, Any]) -> Gimp.Choice:
-    choice = Gimp.Choice.new()
-    # nick, id, label, help
-    for key, value in data.items():
-        choice.add(value, key, value, value)
-
-    return choice
-
-
 def make_choice_from_list(data: list[str]) -> Gimp.Choice:
     choice = Gimp.Choice.new()
     # nick, id, label, help
@@ -32,10 +22,6 @@ def make_choice_from_list(data: list[str]) -> Gimp.Choice:
         choice.add(value, key, value, value)
 
     return choice
-
-
-def roundToMultiple(value: float | int, multiple: int) -> int:
-    return multiple * round(float(value) / multiple)
 
 
 def fetch_stablediffusion_options(api: ApiClient) -> dict[str, Any]:
@@ -75,40 +61,3 @@ def set_logging_dest(use_file_logging: bool) -> None:
     for old_handler in root_logger.handlers[:]:
         root_logger.removeHandler(old_handler)
     root_logger.addHandler(new_handler)
-
-
-def aspect_resize(
-    selection_width: int,
-    selection_height: int,
-    image_width: int,
-    image_height: int,
-    fill: bool = False,
-) -> tuple[int, int]:
-    scale_factor_w = selection_width / image_width
-    scale_factor_h = selection_height / image_height
-    scale_factor = max(scale_factor_w, scale_factor_h) if fill else min(scale_factor_w, scale_factor_h)
-    return int(image_width * scale_factor), int(image_height * scale_factor)
-
-
-def get_progress_at_background(api: ApiClient) -> None:
-    progress = 0
-    job_count = -1
-    try:
-        while progress < 1 and job_count != 0:
-            time.sleep(2)
-            result = api.get("/sdapi/v1/progress", params={"skip_current_image": "true"})
-            if not result or "progress" not in result:
-                logging.warning("Invalid progress response, stopping")
-                break
-            progress = result.get("progress", 0)
-            state = result.get("state", {})
-            job_count = state.get("job_count", 0)
-            eta = result.get("eta_relative", 0)
-
-            Gimp.progress_update(progress)
-            Gimp.progress_set_text(f"Progress: {round(progress * 100, 2)}%, ETA: {round(eta)}s")
-            logging.debug(f"get_progress_at_background {result=}")
-    except Exception as ex:
-        logging.exception(f"Error in progress thread: {ex}")
-    finally:
-        Gimp.progress_end()

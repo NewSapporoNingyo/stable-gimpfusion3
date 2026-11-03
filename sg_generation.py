@@ -30,8 +30,8 @@ def integer_seed(value: float | int) -> int:
 
 
 def validate_dimensions(width: int, height: int) -> None:
-    if width % 8 or height % 8:
-        raise ValueError(_("Width and height must be multiples of 8"))
+    if width <= 0 or height <= 0 or width % 8 or height % 8:
+        raise ValueError(_("Width and height must be positive multiples of 8"))
 
 
 def generation_size(values: dict[str, Any], selection_size: tuple[int, int]) -> tuple[int, int]:
@@ -39,6 +39,12 @@ def generation_size(values: dict[str, Any], selection_size: tuple[int, int]) -> 
         width, height = selection_size
         return 8 * round(width / 8), 8 * round(height / 8)
     return values["width"], values["height"]
+
+
+def aspect_resize(area: tuple[int, int], image: tuple[int, int], *, fill: bool) -> tuple[int, int]:
+    ratios = area[0] / image[0], area[1] / image[1]
+    scale = max(ratios) if fill else min(ratios)
+    return int(image[0] * scale), int(image[1] * scale)
 
 
 def insertion_size(
@@ -52,9 +58,7 @@ def insertion_size(
         return width, height
     if values["insert_mode"] == "Resize to selection":
         return selection_size
-    ratios = selection_size[0] / width, selection_size[1] / height
-    scale = max(ratios) if values["insert_mode"] == "Aspect fill" else min(ratios)
-    return int(width * scale), int(height * scale)
+    return aspect_resize(selection_size, (width, height), fill=values["insert_mode"] == "Aspect fill")
 
 
 def build_request(

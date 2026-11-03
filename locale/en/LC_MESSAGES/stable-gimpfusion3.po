@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: stable-gimpfusion3 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-03 14:04+0900\n"
+"POT-Creation-Date: 2026-11-03 15:44+0900\n"
 "PO-Revision-Date: 2025-12-15 11:18+0300\n"
 "Last-Translator: shsmad <shsmad@gmail.com>\n"
 "Language-Team: English\n"
@@ -21,9 +21,9 @@ msgstr ""
 msgid "Seed must be an integer from -1 to 4294967295"
 msgstr "Seed must be an integer from -1 to 4294967295"
 
-#: sg_generation.py:34 sg_plugins/generation_base.py:359
-msgid "Width and height must be multiples of 8"
-msgstr "Width and height must be multiples of 8"
+#: sg_generation.py:34 sg_plugins/generation_base.py:365
+msgid "Width and height must be positive multiples of 8"
+msgstr "Width and height must be positive multiples of 8"
 
 #: sg_loras.py:28 sg_plugins/generation_base.py:90
 #: sg_plugins/generation_base.py:94
@@ -51,74 +51,74 @@ msgstr "Create a selection or add a source layer mask"
 msgid "Provide a mask with an area to inpaint within the source layer"
 msgstr "Provide a mask with an area to inpaint within the source layer"
 
-#: sg_plugins/config.py:24
+#: sg_plugins/config.py:25
 msgid "Global"
 msgstr "Global"
 
-#: sg_plugins/config.py:25
+#: sg_plugins/config.py:26
 msgid ""
 "This is where you configure params that are shared between all API requests"
 msgstr ""
 "This is where you configure params that are shared between all API requests"
 
-#: sg_plugins/config.py:31
+#: sg_plugins/config.py:32
 msgid "Prompt Suffix"
 msgstr "Prompt Suffix"
 
-#: sg_plugins/config.py:32
+#: sg_plugins/config.py:33
 msgid "Prompt Suffix to add to the prompt automatically"
 msgstr ""
 
-#: sg_plugins/config.py:38
+#: sg_plugins/config.py:39
 msgid "Negative Prompt Suffix"
 msgstr "Negative Prompt Suffix"
 
-#: sg_plugins/config.py:39
+#: sg_plugins/config.py:40
 msgid "Negative Prompt Suffix to add to the negative prompt automatically"
 msgstr ""
 
-#: sg_plugins/config.py:45
+#: sg_plugins/config.py:46
 msgid "Backend API URL base"
 msgstr "Backend API URL base"
 
-#: sg_plugins/config.py:46
+#: sg_plugins/config.py:47
 #, fuzzy
 msgid "Backend API URL base to use for requests"
 msgstr "Backend API URL base"
 
-#: sg_plugins/config.py:52
+#: sg_plugins/config.py:53
 msgid "Debug logging"
 msgstr "Debug logging"
 
-#: sg_plugins/config.py:53
+#: sg_plugins/config.py:54
 msgid "INFO if not set, DEBUG if set logging level"
 msgstr "INFO if not set, DEBUG if set logging level"
 
-#: sg_plugins/config.py:59
+#: sg_plugins/config.py:60
 msgid "Log to file"
 msgstr "Log to file"
 
-#: sg_plugins/config.py:60
+#: sg_plugins/config.py:61
 msgid "Log to file or console"
 msgstr "Log to file or console"
 
-#: sg_plugins/config.py:66
+#: sg_plugins/config.py:67
 msgid "Cache toBase64 results"
 msgstr ""
 
-#: sg_plugins/config.py:67
+#: sg_plugins/config.py:68
 msgid "Enable caching of toBase64 conversions for better performance"
 msgstr ""
 
-#: sg_plugins/config.py:85
+#: sg_plugins/config.py:86
 msgid "Global gimpfusion settings"
 msgstr "Global gimpfusion settings"
 
-#: sg_plugins/config.py:129
+#: sg_plugins/config.py:130
 msgid "Change Model"
 msgstr "Change Model"
 
-#: sg_plugins/config.py:130
+#: sg_plugins/config.py:131
 msgid "Change the Checkpoint Model"
 msgstr "Change the Checkpoint Model"
 
@@ -154,133 +154,138 @@ msgstr ""
 msgid "Unavailable preset option: {field} = {value}"
 msgstr "Unavailable preset option: {field} = {value}"
 
-#: sg_plugins/generation_base.py:160 sg_plugins/generation_base.py:496
+#: sg_plugins/generation_base.py:160 sg_plugins/generation_base.py:510
 msgid "Select a ControlNet input layer from the current image"
 msgstr "Select a ControlNet input layer from the current image"
 
-#: sg_plugins/generation_base.py:171
+#: sg_plugins/generation_base.py:173
 msgid "Generating image"
 msgstr "Generating image"
 
-#: sg_plugins/generation_base.py:179
+#: sg_plugins/generation_base.py:181
+#, python-brace-format
+msgid "Progress: {progress}%, ETA: {eta}s"
+msgstr "Progress: {progress}%, ETA: {eta}s"
+
+#: sg_plugins/generation_base.py:187
 msgid "Inserting layers from response"
 msgstr "Inserting layers from response"
 
-#: sg_plugins/generation_base.py:202
+#: sg_plugins/generation_base.py:210
 msgid "GimpFusion generation"
 msgstr "GimpFusion generation"
 
-#: sg_plugins/generation_base.py:203
+#: sg_plugins/generation_base.py:211
 msgid "Generate"
 msgstr "Generate"
 
-#: sg_plugins/generation_base.py:214 sg_plugins/generation_base.py:451
+#: sg_plugins/generation_base.py:222 sg_plugins/generation_base.py:465
 msgid "Save preset"
 msgstr "Save preset"
 
-#: sg_plugins/generation_base.py:215 sg_plugins/generation_base.py:450
+#: sg_plugins/generation_base.py:223 sg_plugins/generation_base.py:464
 msgid "Save preset as"
 msgstr "Save preset as"
 
-#: sg_plugins/generation_base.py:217
+#: sg_plugins/generation_base.py:225
 msgid "Load preset"
 msgstr "Load preset"
 
-#: sg_plugins/generation_base.py:220
+#: sg_plugins/generation_base.py:228
 msgid "Delete preset"
 msgstr "Delete preset"
 
-#: sg_plugins/generation_base.py:243
+#: sg_plugins/generation_base.py:251
 msgid "Input source"
 msgstr "Input source"
 
-#: sg_plugins/generation_base.py:289 sg_proc_arguments.py:274
+#: sg_plugins/generation_base.py:297 sg_proc_arguments.py:274
 msgid "Inpaint area"
 msgstr "Inpaint area"
 
-#: sg_plugins/generation_base.py:289
+#: sg_plugins/generation_base.py:297
 msgid "Only masked"
 msgstr "Only masked"
 
-#: sg_plugins/generation_base.py:289
+#: sg_plugins/generation_base.py:297
 msgid "Whole picture"
 msgstr "Whole picture"
 
-#: sg_plugins/generation_base.py:299
+#: sg_plugins/generation_base.py:307
 #, python-brace-format
 msgid "ControlNet {slot} parameters"
 msgstr "ControlNet {slot} parameters"
 
-#: sg_plugins/generation_base.py:303
+#: sg_plugins/generation_base.py:311
 msgid "Read layer settings"
 msgstr "Read layer settings"
 
-#: sg_plugins/generation_base.py:329
+#: sg_plugins/generation_base.py:337
 #, python-brace-format
 msgid "Current preset: {name}"
 msgstr "Current preset: {name}"
 
-#: sg_plugins/generation_base.py:330
+#: sg_plugins/generation_base.py:338
 msgid "Unsaved parameters"
 msgstr "Unsaved parameters"
 
-#: sg_plugins/generation_base.py:379
+#: sg_plugins/generation_base.py:393
 #, python-brace-format
 msgid ""
 "Request: {width} x {height}; insertion area: {area_width} x {area_height}"
 msgstr ""
 "Request: {width} x {height}; insertion area: {area_width} x {area_height}"
 
-#: sg_plugins/generation_base.py:395
+#: sg_plugins/generation_base.py:409
 #, python-brace-format
 msgid "Target image: {name}"
 msgstr "Target image: {name}"
 
-#: sg_plugins/generation_base.py:397
+#: sg_plugins/generation_base.py:411
 #, python-brace-format
 msgid "Selection: ({x}, {y}), {width} x {height}"
 msgstr "Selection: ({x}, {y}), {width} x {height}"
 
-#: sg_plugins/generation_base.py:399
+#: sg_plugins/generation_base.py:413
 msgid "Selection: whole image"
 msgstr "Selection: whole image"
 
-#: sg_plugins/generation_base.py:403
+#: sg_plugins/generation_base.py:417
 #, python-brace-format
 msgid "Source layer: {name}"
 msgstr "Source layer: {name}"
 
-#: sg_plugins/generation_base.py:404
+#: sg_plugins/generation_base.py:418
 #, python-brace-format
 msgid "Source: {width} x {height}; offset: ({x}, {y})"
 msgstr "Source: {width} x {height}; offset: ({x}, {y})"
 
-#: sg_plugins/generation_base.py:412
+#: sg_plugins/generation_base.py:426
 msgid "Current selection"
 msgstr "Current selection"
 
-#: sg_plugins/generation_base.py:412
+#: sg_plugins/generation_base.py:426
 msgid "Source layer mask"
 msgstr "Source layer mask"
 
-#: sg_plugins/generation_base.py:412
+#: sg_plugins/generation_base.py:426
 msgid "Create a mask"
 msgstr "Create a mask"
 
-#: sg_plugins/generation_base.py:413
+#: sg_plugins/generation_base.py:427
 #, python-brace-format
 msgid "Mask source: {name}"
 msgstr "Mask source: {name}"
 
-#: sg_plugins/generation_base.py:451
+#: sg_plugins/generation_base.py:465
 msgid "Cancel"
 msgstr "Cancel"
 
-#: sg_plugins/generation_base.py:462
+#: sg_plugins/generation_base.py:476
 msgid "Enter a preset name"
 msgstr "Enter a preset name"
 
-#: sg_plugins/generation_base.py:465
+#: sg_plugins/generation_base.py:479
 msgid "Preset name already exists"
 msgstr "Preset name already exists"
 
