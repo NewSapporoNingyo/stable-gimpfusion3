@@ -513,7 +513,7 @@ msgstr "Immagine di destinazione chiusa; attività terminata"
 
 #: sg_plugins/generation_base.py:104 sg_plugins/panel.py:56
 msgid "Generation mode"
-msgstr "Modalit? di generazione"
+msgstr "Modalità"
 
 #: sg_plugins/generation_base.py:135 sg_plugins/generation_base.py:139
 #, python-brace-format
