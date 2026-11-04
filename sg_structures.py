@@ -13,6 +13,7 @@ import requests
 
 from sg_constants import INSERT_MODES
 from sg_generation import aspect_resize
+from sg_i18n import _
 from sg_sources import PixelSnapshot
 
 gi.require_version("Gimp", "3.0")
@@ -93,11 +94,11 @@ class ResponseLayers:
                 continue
             layer = Layer.fromBase64(img, image)
             if index < len(seeds):
-                layer.rename(f"Generated Layer {seeds[index]}").saveData({
+                layer.rename(_("Generated Layer {seed}").format(seed=seeds[index])).saveData({
                     "info": infotexts[index], "seed": seeds[index],
                 })
             else:
-                layer.rename("Annotator Layer")
+                layer.rename(_("ControlNet auxiliary layer"))
             layer.insertTo(img)
             self.layers.append(layer.layer)
 

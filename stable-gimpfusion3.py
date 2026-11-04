@@ -8,7 +8,6 @@ import sys
 import gi
 import requests
 
-from sg_i18n import DOMAIN
 from sg_plugins import PluginBase
 from sg_plugins.config import ConfigModelPlugin, ConfigPlugin
 from sg_plugins.config_controlnet import ConfigControlnetLayerPlugin
@@ -55,10 +54,8 @@ class GimpfusionPlugin(Gimp.PlugIn):
         super().__init__()
         self.options_loaded = False
 
-    def do_set_i18n(self, name: str) -> str:
-        return DOMAIN
-
     def do_query_procedures(self):
+        self.add_menu_branch("<Image>/GimpFusion", "Config")
         return list(MODULES.keys())
 
     def do_create_procedure(self, name: str) -> Gimp.Procedure:

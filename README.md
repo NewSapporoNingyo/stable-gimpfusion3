@@ -1,132 +1,98 @@
 # Stable-Gimpfusion-3
 
-This is a plugin for using GIMP 3 with Stable Diffusion.
+English | [简体中文](README.zh-CN.md)
 
-[Original plugin by ArtBIT](https://github.com/ArtBIT/stable-gimpfusion) was written on python2 for GIMP 2.10.
+Generate images in GIMP 3.2 through the Stable Diffusion WebUI Forge HTTP API, using text to image, image to image, inpainting and ControlNet.
+A persistent window lets you edit in GIMP while generating, with results inserted as layers.
 
-Rewriten version runs on python3 for GIMP 3. Some refactoring and UI/UX optimisation was made.
+This fork builds on [shsmad's GIMP 3 version](https://github.com/shsmad/stable-gimpfusion3) of
+[ArtBIT's GIMP 2.10 plugin](https://github.com/ArtBIT/stable-gimpfusion). The local acceptance environment is Windows, GIMP 3.2.6, GIMP Python 3.14.7 and Forge.
 
-Tested on Ubuntu 24.04 with PPA GIMP 3.0.6 (no sandboxed environments like AppImage, snap of flatpak) with API:
+## Installation and connection
 
-- [Stable Diffusion WebUI Forge](https://github.com/lllyasviel/stable-diffusion-webui-forge)
-- [Stable Diffusion WebUI Forge - Classic](https://github.com/Haoming02/sd-webui-forge-classic)
+1. Place the complete repository in `%APPDATA%\GIMP\3.2\plug-ins\stable-gimpfusion3`, including the entry script, all `sg_*.py` files, `sg_plugins` and `locale`.
+2. Confirm that `import requests` succeeds with GIMP's Python, located at `bin\python.exe` inside the GIMP installation.
+3. Start Forge with `--api`. The local launcher is `C:\data\webui_forge_dev\run-forge.bat`, using `--api --cuda-malloc`.
+4. Restart GIMP. Set the backend address in `GimpFusion → Config → Global`; the default is `http://127.0.0.1:7860`.
+5. Open or create an image and choose `GimpFusion → Open generation panel`. The Text to image, Image to image and Inpainting menu entries open the same panel in their respective modes.
 
-## Installation
+The plugin follows GIMP's interface language and provides English, Italian, Russian and Simplified Chinese.
+Choose the language in GIMP's Edit → Preferences → Interface settings, then restart GIMP.
 
-- Download all `*.py` scripts including the directory `sg_plugins`,
-- In GIMP plug-ins directory create an appropriate empty subdirectory called, for example, `stable-gimpfusion3`,
-  save files into your just created gimp plug-ins directory, ie (replace `3.0` with your real version):
-  - Linux: `$HOME/.gimp-3.0/plug-ins/stable-gimpfusion3` or `$XDG_CONFIG_HOME/GIMP/3.0/plug-ins/stable-gimpfusion3`
-  - Windows: `%APPDATA%\GIMP\3.0\plug-ins\stable-gimpfusion3` or `C:\Users\{your_id}\AppData\Roaming\GIMP\3.0\plug-ins\stable-gimpfusion3`
-  - OSX: `$HOME/Library/GIMP/3.0/plug-ins/stable-gimpfusion3` or `$HOME/Library/Application Support/GIMP/3.0/plug-ins/stable-gimpfusion3`
-- Ensure the execute bit is set on MacOS and Linux by running `chmod +x YOUR_PATH_TO/plugins/stable-gimpfusion3/stable-gimpfusion3.py`
-- Restart Gimp, and you will see a new menu item called `GimpFusion`
-- Run script via `GimpFusion -> Config` and set the backend API URL base (should be `http://127.0.0.1:7860/` by default)
+## Persistent panel and generation
 
-## 命名预设（GIMP 3.2）
+Choose the target image and generation mode at the top of the panel. Enter positive and negative prompts, choose a model, sampler and parameters, then click Generate.
+Both prompt editors show eight lines. Parameters, LoRA and settings operations expand within the panel.
+Global prompt suffixes are appended as “local prompt + space + suffix”.
 
-从 `GimpFusion` 的文生图、图生图或局部重绘菜单打开生成窗口，在 `Generation mode` 中切换模式。
+Seed `-1` selects a random seed; `0` through `4294967295` select a fixed seed. Candidates sets the number of images generated in one batch.
+Width and height use positive multiples of 8. The panel displays request dimensions and the insertion area.
+Higher denoising strength allows greater changes to the source in img2img and inpaint.
 
-1. 填写提示词，选择 checkpoint、采样器及生成参数。
-2. 点击 `Save preset as` 输入名称，保存一套完整预设。
-3. 在顶部列表选择预设，点击 `Load preset` 恢复模式和参数。
-4. 修改后点击 `Save preset` 更新当前预设；点击 `Delete preset` 删除列表中选中的预设。
+| Mode | Input and result |
+| --- | --- |
+| txt2img | Generate from prompts. The insertion mode sets result dimensions; results start at the selection's top-left corner. An empty selection uses the canvas bounds |
+| img2img | Use the complete pixels of the first selected layer in the target image. Generate at the panel dimensions and insert at the source offset |
+| inpaint | Use the source layer and a mask, with the current selection taking precedence over the source layer mask. White is repainted; Invert Mask selects black |
 
-菜单决定打开时的初始模式。上次预设与该模式相同时自动恢复；跨模式预设通过 `Load preset` 载入。
-参数修改通过 `Save preset` 写入命名预设。
+Input source shows the target, layer, preview, dimensions, offset and actual mask source. It refreshes when the target or selected layer changes and when the panel regains focus.
+Generation captures the latest input snapshot. Whole picture samples the entire source; Only masked samples the mask and padding, then composites into the source dimensions.
+The default mask fill mode is `original`.
 
-提示词按“本次提示词 + 空格 + 全局后缀”合成。seed `-1` 表示随机，`0` 至 `4294967295` 表示指定种子。
-窗口显示实际请求尺寸和结果插入尺寸；局部重绘另显示来源尺寸。
+During generation you can paint, edit parameters and switch targets. The current task uses its initial input and target; the next task uses the latest state.
+The panel runs one task at a time. Results become separate layers: choose candidates through layer visibility, undo the insertion in one step and continue editing.
+The checkbox at the bottom enables a Windows system notification after successful insertion.
 
-预设保存两组 ControlNet 参数。每次使用时选择当前图像中的输入图层；展开参数区可编辑处理器、模型、权重等选项。
-`Read layer settings` 将所选图层保存的 ControlNet 参数读入窗口。切换输入图层保留窗口中的参数。
-LoRA 区域可按名称或 alias 搜索模型，通过 `Add LoRA` 添加多个条目，编辑权重、启用开关及移除条目。
-`Refresh LoRAs` 重新扫描 Forge 的 LoRA 目录。展开 `LoRA details` 可查看路径和 metadata。
-权重默认 `1`，支持负数和 `0`。`Final LoRA tags` 显示实际用于请求的标签。
-启用的选择器条目提供同一模型的最终权重，提示词输入框保存用户原文。命名预设保存完整 LoRA 配置。
-标签合成规则和验收结果见 [S4 LoRA 选择器](doc/s4-loras.md)。
+## Settings files and XCF data
 
-详细参数规则与验收结果见 [S2 命名预设](doc/s2-presets.md)。
+Expand Generation settings to use these operations:
 
-## 快捷键生成（GIMP 3.2）
+- Save file as opens the Windows file dialog and writes prompts, model and generation parameters to a UTF-8 INI document with a `.txt` extension.
+- Load file reads the selected file, keeps the panel's current mode and restores common fields and applicable mode fields.
+- Save file writes changes to the current file and asks for a path on the first save.
+- Save to image manually attaches the current settings to the target image; save the image as `.xcf` afterwards.
+- Load from image manually restores the settings attached to the current target image.
 
-从 `GimpFusion` 的文生图、图生图或局部重绘菜单打开同一个常驻面板。
-菜单更新目标图像并切换到对应模式，面板中的生成按钮使用当前参数生成。
+The same settings file works across all three modes. For example, denoising strength applies to img2img and inpaint; mode fields remain in the saved file.
+Closing the panel saves the latest parameters, current file path, window dimensions and notification setting for the next opening.
+Save to image updates the XCF attachment, which participates in GIMP undo and survives saving and reopening the XCF.
 
-1. 打开“编辑 → 键盘快捷键”，搜索 `stable-gimpfusion-generate-current` 或 `Generate with current parameters`。
-2. 选中命令的快捷键列，按 `Ctrl+Alt+G`，点击“保存”。
-3. 在面板中填写提示词和生成参数，回到 GIMP 画布绘画。
-4. 按 `Ctrl+Alt+G`，使用当前图像、来源图层和面板参数生成，结果插入任务开始时的目标图像。
+## LoRA and ControlNet
 
-面板关闭时，快捷键会打开面板、恢复上次参数并生成。任务运行期间，面板保持单任务状态。
-命令、参数与验收记录见 [S7 快捷键生成](doc/s7-shortcuts.md)。
+Search LoRA names or aliases. Click a model to add `<lora:identifier:weight>` to the positive prompt; click again to remove its tag.
+Edit weights directly in the prompt, including negative values and `0`. New tags use Forge's default weight, name preference and separator settings.
+Refresh LoRAs rescans Forge's directory; LoRA details shows paths and metadata. Tags are saved with the prompt in settings files and image data.
 
-## Translation
+ControlNet supports two inputs. Enable a slot, choose an input layer in the current target and expand its parameters to set the preprocessor, model, weight and sampling start/end progress.
+Read layer settings loads parameters saved through Active layer as ControlNet. Select input layers again after switching targets.
+Threshold meanings depend on the selected preprocessor. Reference preprocessors can use model `None`.
 
-By default, GIMP plug-ins look up gettext compiled message catalogs in the subdirectory locale/
-under the plug-in folder (same folder as gimp_get_progname()) with a text domain equal to the plug-in name
-(regardless procedure_name).
+Import candidates only imports generated candidates when enabled. Disable it to also import preprocessing or reference images returned by ControlNet. This applies to all three modes.
 
-To add new translation:
+## Windows snapping and keyboard shortcut
+
+Drag the panel edges to resize it; the minimum size is 360×480. Drag GIMP's title bar to one side of the screen and select the panel in Windows Snap Assist.
+Drag the divider to adjust their proportions.
+
+1. Open Edit → Keyboard Shortcuts in GIMP.
+2. Search for `stable-gimpfusion-generate-current` or Generate with current parameters.
+3. Select its shortcut column, press `Ctrl+Alt+G` and save.
+4. Set panel parameters, return to the canvas, paint and press the shortcut to generate.
+
+The shortcut receives GIMP's current image and uses the panel's current mode and parameters.
+With the panel closed, it restores the last parameters and generates; an existing panel receives the command directly.
+
+## Translation and development
+
+Update translations with GNU gettext:
 
 ```bash
-cd path/to/project/stable-gimpfusion3/
-mkdir -p locale/{YOUR_LANG}/LC_MESSAGES
-msginit -l ru -i locale/stable-gimpfusion3.pot -o locale/{YOUR_LANG}/LC_MESSAGES/stable-gimpfusion3.po
+bash update-translations.sh
 ```
 
-Edit `locale/{YOUR_LANG}/LC_MESSAGES/stable-gimpfusion3.po`, add translations.
+The script extracts production messages, merges en, it, ru and zhcn, checks completeness and format placeholders, and compiles `.mo` files.
+Maintain Chinese translations in `locale/zhcn/LC_MESSAGES`; the script generates the `locale/zh_CN` binary for GIMP's native menus.
+Mark interface text with `sg_i18n._()`. Keep API fields, model names, sampler names and technical option identifiers in their original form.
 
-To update from new pot-file:
-
-```bash
-msgmerge -U locale/{YOUR_LANG}/LC_MESSAGES/stable-gimpfusion3.po locale/stable-gimpfusion3.pot
-```
-
-Then compile translation:
-
-```bash
-msgfmt locale/ru/LC_MESSAGES/stable-gimpfusion3.po -o locale/{YOUR_LANG}/LC_MESSAGES/stable-gimpfusion3.mo
-```
-
-### Translate
-
-- Names of menus and menu items
-- Descriptions of parameters
-- Error messages for the user
-- Progress messages
-
-### DO NOT translate
-
-- Technical names (sampler names, module names, Resize modes, Control modes, Insert modes)
-- Names of API parameters
-- File names and paths
-- Logs and debugging messages
-
-### Usage examples
-
-Use `_()` in code for all strings, that should be translated:
-
-```python
-from sg_i18n import _
-
-menu_label = _("Text to image")
-description = _("Generate image from text prompt")
-error_message = _("Error occurred: {error}").format(error=str(ex))
-```
-
-## GIMP Plugins dev docs
-
-- <https://developer.gimp.org/api/3.0/libgimp/index.html>
-- <https://developer.gimp.org/api/3.0/libgimpui/index.html>
-- <https://gegl.org/operations/>
-- <https://github.com/mix1009/sdwebuiapi> for scripts params details
-- <https://www.gitbook.com/book/athenajc/python-gtk-3-api> gtk via python
-- <https://gist.github.com/DarkStoorM/4b1684e5d42532e8d55517e61001d97a>
-- <https://www.digitalcreativeai.net/en/post/how-to-use-stable-diffusion-web-ui-image-to-image>
-
-## TODO
-
-- <https://github.com/shsmad/gimp-stable-boy> X/Y plotting, Upscale
-- ugly, worst quality, low quality, plastic, fake, anime, cartoon, artifacts, painting, 3d for negprompt
-- img2img soft inpaint
+Development, synchronization and checks are described in the Chinese [repository guide](AGENTS.md), [development plan](doc/devplan.md) and [TODO](TODO.md).
+Feature records cover the [persistent panel](doc/s5-panel.md), [generation settings](doc/s6-generation-settings.md) and [keyboard shortcut](doc/s7-shortcuts.md).

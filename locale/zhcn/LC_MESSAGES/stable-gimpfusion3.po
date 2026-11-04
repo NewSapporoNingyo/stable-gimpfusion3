@@ -1,0 +1,808 @@
+# Translations for stable-gimpfusion3.
+# Copyright (C) 2025 shsmad
+# Distributed under the project license.
+msgid ""
+msgstr ""
+"Project-Id-Version: stable-gimpfusion3 0.1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-04 12:41+0900\n"
+"PO-Revision-Date: 2026-11-04 00:00+0900\n"
+"Last-Translator: stable-gimpfusion3 contributors\n"
+"Language-Team: zhcn\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: stable-gimpfusion3.py:58
+msgid "Config"
+msgstr "配置"
+
+#: sg_generation.py:71
+msgid "Seed must be an integer from -1 to 4294967295"
+msgstr "种子必须为 -1 至 4294967295 的整数"
+
+#: sg_generation.py:77 sg_plugins/generation_base.py:440
+msgid "Width and height must be positive multiples of 8"
+msgstr "宽高必须为正的 8 的倍数"
+
+#: sg_proc_arguments.py:18 sg_proc_arguments.py:303
+#: sg_plugins/generation_base.py:109
+msgid "Model"
+msgstr "模型"
+
+#: sg_proc_arguments.py:19 sg_plugins/generation_base.py:109
+msgid "Model to use for inference"
+msgstr "用于生成的模型"
+
+#: sg_proc_arguments.py:28
+msgid "Add VAE and text encoders for Flux"
+msgstr "添加 Flux 的 VAE 与文本编码器"
+
+#: sg_proc_arguments.py:30
+msgid ""
+"Flux additional modules:\n"
+"Autoguess: add the listed modules for Flux or GGUF model names.\n"
+"Never add: use an empty additional-module list.\n"
+"Always add: use the listed modules."
+msgstr ""
+"Flux 附加模块：\n"
+"Autoguess：模型名包含 Flux 或以 GGUF 结尾时添加所列模块。\n"
+"Never add：使用空的附加模块列表。\n"
+"Always add：使用所列模块。"
+
+#: sg_proc_arguments.py:57
+msgid "Flux VAEs and text encoders"
+msgstr "Flux VAE 与文本编码器"
+
+#: sg_proc_arguments.py:58
+msgid "Flux VAEs and text encoders to use for Flux-based models"
+msgstr "Flux 模型使用的 VAE 与文本编码器"
+
+#: sg_proc_arguments.py:67
+msgid "Prompt"
+msgstr "正向提示词"
+
+#: sg_proc_arguments.py:68
+msgid "A text string that describes the image you want to generate"
+msgstr "描述要生成的图像"
+
+#: sg_proc_arguments.py:74
+msgid "Negative Prompt"
+msgstr "负向提示词"
+
+#: sg_proc_arguments.py:75
+msgid "Features to reduce in the generated image"
+msgstr "减少生成图像中的这些特征"
+
+#: sg_proc_arguments.py:81
+msgid "Seed"
+msgstr "种子"
+
+#: sg_proc_arguments.py:82
+msgid "Seed: -1 for random, 0 or a positive integer for a fixed result"
+msgstr "种子：-1 为随机，0 或正整数为固定种子"
+
+#: sg_proc_arguments.py:90
+msgid "Candidates"
+msgstr "候选数量"
+
+#: sg_proc_arguments.py:91
+msgid "Number of candidate images generated in one batch"
+msgstr "一次批量生成的候选图像数量"
+
+#: sg_proc_arguments.py:99
+msgid "Steps"
+msgstr "采样步数"
+
+#: sg_proc_arguments.py:100
+msgid "Number of sampling steps; more steps increase generation time"
+msgstr "采样步数；增加步数会延长生成时间"
+
+#: sg_proc_arguments.py:108
+msgid "Mask Blur"
+msgstr "蒙版模糊"
+
+#: sg_proc_arguments.py:109
+msgid ""
+"Gaussian blur radius in pixels on both sides of inpainting mask edges; "
+"applies to inpaint"
+msgstr "重绘蒙版边缘两侧的高斯模糊半径，单位为像素；适用于局部重绘"
+
+#: sg_proc_arguments.py:117
+msgid "Width"
+msgstr "宽度"
+
+#: sg_proc_arguments.py:118
+msgid "Width of the image you want to generate"
+msgstr "生成图像的宽度"
+
+#: sg_proc_arguments.py:126
+msgid "Height"
+msgstr "高度"
+
+#: sg_proc_arguments.py:127
+msgid "Height of the image that you want to generate"
+msgstr "生成图像的高度"
+
+#: sg_proc_arguments.py:135
+msgid "CFG Scale"
+msgstr "CFG 强度"
+
+#: sg_proc_arguments.py:136
+msgid "Strength of prompt guidance during sampling"
+msgstr "采样时提示词的引导强度"
+
+#: sg_proc_arguments.py:144
+msgid "Denoising Strength"
+msgstr "降噪强度"
+
+#: sg_proc_arguments.py:145
+msgid ""
+"Amount of change to the source image in img2img and inpaint; higher values "
+"allow larger changes"
+msgstr "图生图和局部重绘对来源图像的改动程度；数值越高，改动越大"
+
+#: sg_proc_arguments.py:153
+msgid "Sampler"
+msgstr "采样器"
+
+#: sg_proc_arguments.py:154
+msgid "Sampler to use"
+msgstr "使用的采样器"
+
+#: sg_proc_arguments.py:161
+msgid "Restore faces"
+msgstr "修复面部"
+
+#: sg_proc_arguments.py:162
+msgid "Use GFPGAN / CodeFormer to restore faces"
+msgstr "使用 GFPGAN / CodeFormer 修复面部"
+
+#: sg_proc_arguments.py:168
+msgid "Tiling"
+msgstr "平铺纹理"
+
+#: sg_proc_arguments.py:169
+msgid "Generate a texture with seamless edges for tiling"
+msgstr "生成边缘可无缝拼接的平铺纹理"
+
+#: sg_proc_arguments.py:176
+msgid "Insert mode"
+msgstr "插入方式"
+
+#: sg_proc_arguments.py:178
+msgid ""
+"Placement in txt2img:\n"
+"Resize to selection: stretch to the selection dimensions.\n"
+"Insert as is: keep the generated dimensions.\n"
+"Aspect fill: scale proportionally to cover the selection.\n"
+"Aspect fit: scale proportionally to fit inside the selection.\n"
+"Use selection size: generate at the selection dimensions rounded to "
+"multiples of 8.\n"
+"Results are placed at the selection top-left corner."
+msgstr ""
+"文生图的放置方式：\n"
+"Resize to selection：拉伸到选区宽高。\n"
+"Insert as is：保留生成尺寸。\n"
+"Aspect fill：等比缩放并覆盖选区。\n"
+"Aspect fit：等比缩放并放入选区。\n"
+"Use selection size：按选区尺寸生成，宽高取整为 8 的倍数。\n"
+"结果放在选区左上角。"
+
+#: sg_proc_arguments.py:195
+msgid "Enable ControlNet 1"
+msgstr "启用 ControlNet 1"
+
+#: sg_proc_arguments.py:196
+msgid "Enable ControlNet 1 for generation"
+msgstr "生成时启用 ControlNet 1"
+
+#: sg_proc_arguments.py:202
+msgid "ControlNet 1 Layer"
+msgstr "ControlNet 1 图层"
+
+#: sg_proc_arguments.py:203
+msgid "ControlNet 1 Layer for generation"
+msgstr "生成时使用的 ControlNet 1 输入图层"
+
+#: sg_proc_arguments.py:209
+msgid "Enable ControlNet 2"
+msgstr "启用 ControlNet 2"
+
+#: sg_proc_arguments.py:210
+msgid "Enable ControlNet 2 for generation"
+msgstr "生成时启用 ControlNet 2"
+
+#: sg_proc_arguments.py:216
+msgid "ControlNet 2 Layer"
+msgstr "ControlNet 2 图层"
+
+#: sg_proc_arguments.py:217
+msgid "ControlNet 2 Layer for generation"
+msgstr "生成时使用的 ControlNet 2 输入图层"
+
+#: sg_proc_arguments.py:223
+msgid "Import candidates only"
+msgstr "只导入生成候选"
+
+#: sg_proc_arguments.py:225
+msgid ""
+"Enabled: import generated candidates. Disabled: also import ControlNet "
+"preprocessing or reference images. Applies to all three modes."
+msgstr ""
+"开启时导入生成候选；关闭时同时导入 ControlNet 返回的预处理图或参考图。适用于"
+"三种生成模式。"
+
+#: sg_proc_arguments.py:236 sg_proc_arguments.py:304
+msgid "Resize Mode"
+msgstr "缩放方式"
+
+#: sg_proc_arguments.py:238
+msgid ""
+"Resizing in img2img and inpaint:\n"
+"Just Resize: stretch to the requested dimensions.\n"
+"Crop And Resize: scale proportionally to cover the frame, then crop.\n"
+"Resize And Fill: fit inside the frame and extend the edge colors.\n"
+"Just Resize (Latent Upscale): resize in latent space."
+msgstr ""
+"图生图和局部重绘的缩放方式：\n"
+"Just Resize：拉伸到请求尺寸。\n"
+"Crop And Resize：等比缩放并覆盖画框，再裁剪。\n"
+"Resize And Fill：等比放入画框，用边缘颜色填充空白。\n"
+"Just Resize (Latent Upscale)：在潜空间缩放。"
+
+#: sg_proc_arguments.py:253
+msgid "Invert Mask"
+msgstr "反转蒙版"
+
+#: sg_proc_arguments.py:254
+msgid ""
+"Enabled: repaint the black mask area. Disabled: repaint the white mask area."
+msgstr "开启时重绘蒙版黑色区域；关闭时重绘白色区域。"
+
+#: sg_proc_arguments.py:260 sg_plugins/generation_base.py:357
+msgid "Inpaint area"
+msgstr "重绘区域"
+
+#: sg_proc_arguments.py:262
+msgid ""
+"Whole picture samples the entire source; Only masked samples the mask area "
+"and composites it into the source"
+msgstr "全图按整张来源采样；仅蒙版区域对蒙版范围采样后合回来源"
+
+#: sg_proc_arguments.py:270
+msgid "Only masked padding, pixels"
+msgstr "蒙版区域边距（像素）"
+
+#: sg_proc_arguments.py:271
+msgid "Context added around the mask before sampling in Only masked mode"
+msgstr "仅蒙版区域模式下，采样前在蒙版周围增加的上下文范围"
+
+#: sg_proc_arguments.py:279
+msgid "Mask fill mode"
+msgstr "蒙版填充方式"
+
+#: sg_proc_arguments.py:281
+msgid ""
+"Initial content in the inpainting mask:\n"
+"fill: fill using surrounding colors.\n"
+"original: use the source content.\n"
+"latent noise: initialize with seeded latent noise.\n"
+"latent nothing: initialize the masked latent values to zero."
+msgstr ""
+"重绘蒙版内的初始内容：\n"
+"fill：用周围颜色填充。\n"
+"original：使用来源内容。\n"
+"latent noise：使用种子产生的潜空间噪声。\n"
+"latent nothing：将蒙版区域的初始潜变量置零。"
+
+#: sg_proc_arguments.py:302
+msgid "Module"
+msgstr "预处理器"
+
+#: sg_proc_arguments.py:302
+msgid "ControlNet preprocessor applied to the input layer"
+msgstr "应用于输入图层的 ControlNet 预处理器"
+
+#: sg_proc_arguments.py:303
+msgid "ControlNet model paired with the preprocessor"
+msgstr "与预处理器配合使用的 ControlNet 模型"
+
+#: sg_proc_arguments.py:304
+msgid "Fit the ControlNet input to the generation frame"
+msgstr "将 ControlNet 输入适配到生成画框"
+
+#: sg_proc_arguments.py:305
+msgid "Control Mode"
+msgstr "控制方式"
+
+#: sg_proc_arguments.py:305
+msgid "Balance prompt guidance and ControlNet guidance"
+msgstr "平衡提示词与 ControlNet 的引导作用"
+
+#: sg_proc_arguments.py:316
+msgid "Weight"
+msgstr "权重"
+
+#: sg_proc_arguments.py:316
+msgid "Strength of the ControlNet condition"
+msgstr "ControlNet 条件的影响强度"
+
+#: sg_proc_arguments.py:319
+msgid "Guidance Start (T)"
+msgstr "引导起点"
+
+#: sg_proc_arguments.py:320
+msgid "Sampling progress at which ControlNet starts; 0 is the beginning"
+msgstr "ControlNet 开始参与的采样进度；0 为起点"
+
+#: sg_proc_arguments.py:325
+msgid "Guidance End (T)"
+msgstr "引导终点"
+
+#: sg_proc_arguments.py:325
+msgid "Sampling progress at which ControlNet ends; 1 is the end"
+msgstr "ControlNet 结束参与的采样进度；1 为终点"
+
+#: sg_proc_arguments.py:328
+msgid "Threshold A"
+msgstr "阈值 A"
+
+#: sg_proc_arguments.py:329
+msgid ""
+"First preprocessor parameter; meaning and range depend on the selected module"
+msgstr "预处理器的第一个参数；含义和范围由所选预处理器决定"
+
+#: sg_proc_arguments.py:336
+msgid "Threshold B"
+msgstr "阈值 B"
+
+#: sg_proc_arguments.py:337
+msgid ""
+"Second preprocessor parameter; meaning and range depend on the selected "
+"module"
+msgstr "预处理器的第二个参数；含义和范围由所选预处理器决定"
+
+#: sg_proc_arguments.py:354
+msgid "Processor Resolution"
+msgstr "预处理分辨率"
+
+#: sg_proc_arguments.py:355
+msgid "ControlNet preprocessing resolution"
+msgstr "ControlNet 预处理分辨率"
+
+#: sg_sources.py:94
+msgid "Open the target image"
+msgstr "打开目标图像"
+
+#: sg_sources.py:124
+msgid "Select a source layer"
+msgstr "选择来源图层"
+
+#: sg_sources.py:127
+msgid "Create a selection or add a source layer mask"
+msgstr "创建选区或添加来源图层蒙版"
+
+#: sg_sources.py:130
+msgid "Provide a mask with an area to inpaint within the source layer"
+msgstr "在来源图层内提供需要重绘的蒙版区域"
+
+#: sg_structures.py:97
+#, python-brace-format
+msgid "Generated Layer {seed}"
+msgstr "生成图层 {seed}"
+
+#: sg_structures.py:101
+msgid "ControlNet auxiliary layer"
+msgstr "ControlNet 辅助图层"
+
+#: sg_plugins/config.py:25
+msgid "Global"
+msgstr "全局设置"
+
+#: sg_plugins/config.py:26
+msgid ""
+"This is where you configure params that are shared between all API requests"
+msgstr "配置所有 API 请求共用的参数"
+
+#: sg_plugins/config.py:32
+msgid "Prompt Suffix"
+msgstr "正向提示词后缀"
+
+#: sg_plugins/config.py:33
+msgid "Prompt Suffix to add to the prompt automatically"
+msgstr "自动添加到正向提示词末尾的内容"
+
+#: sg_plugins/config.py:39
+msgid "Negative Prompt Suffix"
+msgstr "负向提示词后缀"
+
+#: sg_plugins/config.py:40
+msgid "Negative Prompt Suffix to add to the negative prompt automatically"
+msgstr "自动添加到负向提示词末尾的内容"
+
+#: sg_plugins/config.py:46
+msgid "Backend API URL base"
+msgstr "后端 API 地址"
+
+#: sg_plugins/config.py:47
+msgid "Backend API URL base to use for requests"
+msgstr "请求使用的后端 API 基础地址"
+
+#: sg_plugins/config.py:53
+msgid "Debug logging"
+msgstr "调试日志"
+
+#: sg_plugins/config.py:54
+msgid "INFO if not set, DEBUG if set logging level"
+msgstr "开启时使用 DEBUG 日志级别，关闭时使用 INFO"
+
+#: sg_plugins/config.py:60
+msgid "Log to file"
+msgstr "日志写入文件"
+
+#: sg_plugins/config.py:61
+msgid "Log to file or console"
+msgstr "开启时将日志写入文件，关闭时写入控制台"
+
+#: sg_plugins/config.py:67
+msgid "Cache toBase64 results"
+msgstr "缓存 Base64 转换结果"
+
+#: sg_plugins/config.py:68
+msgid "Enable caching of toBase64 conversions for better performance"
+msgstr "缓存 Base64 转换结果以提高性能"
+
+#: sg_plugins/config.py:86
+msgid "Global gimpfusion settings"
+msgstr "GimpFusion 全局设置"
+
+#: sg_plugins/config.py:130
+msgid "Change Model"
+msgstr "切换模型"
+
+#: sg_plugins/config.py:131
+msgid "Change the Checkpoint Model"
+msgstr "切换 checkpoint 模型"
+
+#: sg_plugins/config.py:183
+msgid "Changing model..."
+msgstr "正在切换模型……"
+
+#: sg_plugins/config_controlnet.py:20
+msgid "Active layer as ControlNet"
+msgstr "将当前图层配置为 ControlNet 输入"
+
+#: sg_plugins/config_controlnet.py:21
+msgid ""
+"Convert current layer to ControlNet layer or edit ControlNet Layer's options"
+msgstr "为当前图层保存或编辑 ControlNet 参数"
+
+#: sg_plugins/generation_base.py:76
+msgid "Target image closed; task finished"
+msgstr "目标图像已关闭；任务结束"
+
+#: sg_plugins/generation_base.py:104 sg_plugins/panel.py:56
+msgid "Generation mode"
+msgstr "生成模式"
+
+#: sg_plugins/generation_base.py:135 sg_plugins/generation_base.py:139
+#, python-brace-format
+msgid "Invalid generation field: {field}"
+msgstr "生成字段无效：{field}"
+
+#: sg_plugins/generation_base.py:144
+#, python-brace-format
+msgid "Unavailable generation option: {field} = {value}"
+msgstr "生成选项不可用：{field} = {value}"
+
+#: sg_plugins/generation_base.py:197 sg_plugins/generation_base.py:637
+msgid "Select a ControlNet input layer from the current image"
+msgstr "从当前图像中选择 ControlNet 输入图层"
+
+#: sg_plugins/generation_base.py:216 sg_plugins/panel.py:327
+#: sg_plugins/panel.py:328
+msgid "Generating image"
+msgstr "正在生成图像"
+
+#: sg_plugins/generation_base.py:223 sg_plugins/panel.py:358
+#, python-brace-format
+msgid "Progress: {progress}%, ETA: {eta}s"
+msgstr "进度：{progress}%，预计剩余 {eta} 秒"
+
+#: sg_plugins/generation_base.py:229
+msgid "Inserting layers from response"
+msgstr "正在插入返回图层"
+
+#: sg_plugins/generation_base.py:251 sg_plugins/panel.py:116
+msgid "GimpFusion generation"
+msgstr "GimpFusion 生成"
+
+#: sg_plugins/generation_base.py:252 sg_plugins/panel.py:226
+msgid "Generate"
+msgstr "生成"
+
+#: sg_plugins/generation_base.py:269
+msgid "Save file"
+msgstr "保存文件"
+
+#: sg_plugins/generation_base.py:270
+msgid "Save file as"
+msgstr "文件另存为"
+
+#: sg_plugins/generation_base.py:271
+msgid "Save to image"
+msgstr "保存到图像"
+
+#: sg_plugins/generation_base.py:272
+msgid "Load from image"
+msgstr "从图像载入"
+
+#: sg_plugins/generation_base.py:275
+msgid "Load file"
+msgstr "载入文件"
+
+#: sg_plugins/generation_base.py:306
+msgid "Generation settings"
+msgstr "生成配置"
+
+#: sg_plugins/generation_base.py:309
+msgid "Input source"
+msgstr "输入来源"
+
+#: sg_plugins/generation_base.py:336
+msgid "Generation parameters"
+msgstr "生成参数"
+
+#: sg_plugins/generation_base.py:357
+msgid "Only masked"
+msgstr "仅蒙版区域"
+
+#: sg_plugins/generation_base.py:357
+msgid "Whole picture"
+msgstr "全图"
+
+#: sg_plugins/generation_base.py:367
+#, python-brace-format
+msgid "ControlNet {slot} parameters"
+msgstr "ControlNet {slot} 参数"
+
+#: sg_plugins/generation_base.py:371
+msgid "Read layer settings"
+msgstr "读取图层设置"
+
+#: sg_plugins/generation_base.py:407
+#, python-brace-format
+msgid "File: {name}"
+msgstr "文件：{name}"
+
+#: sg_plugins/generation_base.py:409
+#, python-brace-format
+msgid "Settings from image: {name}"
+msgstr "图像中的配置：{name}"
+
+#: sg_plugins/generation_base.py:411
+msgid "Unsaved parameters"
+msgstr "未保存的参数"
+
+#: sg_plugins/generation_base.py:472
+#, python-brace-format
+msgid ""
+"Request: {width} x {height}; insertion area: {area_width} x {area_height}"
+msgstr "请求：{width} × {height}；插入区域：{area_width} × {area_height}"
+
+#: sg_plugins/generation_base.py:485
+msgid "Select a target image"
+msgstr "选择目标图像"
+
+#: sg_plugins/generation_base.py:501
+#, python-brace-format
+msgid "Target image: {name}"
+msgstr "目标图像：{name}"
+
+#: sg_plugins/generation_base.py:503
+#, python-brace-format
+msgid "Selection: ({x}, {y}), {width} x {height}"
+msgstr "选区：({x}, {y})，{width} × {height}"
+
+#: sg_plugins/generation_base.py:505
+msgid "Selection: whole image"
+msgstr "选区：整张图像"
+
+#: sg_plugins/generation_base.py:509
+#, python-brace-format
+msgid "Source layer: {name}"
+msgstr "来源图层：{name}"
+
+#: sg_plugins/generation_base.py:510
+#, python-brace-format
+msgid "Source: {width} x {height}; offset: ({x}, {y})"
+msgstr "来源：{width} × {height}；偏移：({x}, {y})"
+
+#: sg_plugins/generation_base.py:518
+msgid "Current selection"
+msgstr "当前选区"
+
+#: sg_plugins/generation_base.py:518
+msgid "Source layer mask"
+msgstr "来源图层蒙版"
+
+#: sg_plugins/generation_base.py:518
+msgid "Create a mask"
+msgstr "创建蒙版"
+
+#: sg_plugins/generation_base.py:519
+#, python-brace-format
+msgid "Mask source: {name}"
+msgstr "蒙版来源：{name}"
+
+#: sg_plugins/generation_base.py:541
+msgid "Save generation settings"
+msgstr "保存生成配置"
+
+#: sg_plugins/generation_base.py:541
+msgid "Load generation settings"
+msgstr "载入生成配置"
+
+#: sg_plugins/generation_base.py:542
+msgid "Save"
+msgstr "保存"
+
+#: sg_plugins/generation_base.py:542
+msgid "Open"
+msgstr "打开"
+
+#: sg_plugins/generation_base.py:542
+msgid "Cancel"
+msgstr "取消"
+
+#: sg_plugins/generation_base.py:545
+msgid "Generation settings (*.txt)"
+msgstr "生成配置 (*.txt)"
+
+#: sg_plugins/generation_base.py:611
+msgid "Could not save generation settings to the image"
+msgstr "生成配置保存到图像失败"
+
+#: sg_plugins/generation_base.py:621
+msgid "The current image has no generation settings"
+msgstr "当前图像尚未保存生成配置"
+
+#: sg_plugins/img2img.py:7
+msgid "Image to image"
+msgstr "图生图"
+
+#: sg_plugins/img2img.py:8
+msgid "Generate image based on other image"
+msgstr "根据来源图像生成图像"
+
+#: sg_plugins/inpainting.py:7
+msgid "Inpainting"
+msgstr "局部重绘"
+
+#: sg_plugins/inpainting.py:8
+msgid "Inpainting in existing image"
+msgstr "重绘现有图像中的区域"
+
+#: sg_plugins/layerinfo.py:21
+msgid "Layer Info"
+msgstr "图层信息"
+
+#: sg_plugins/layerinfo.py:22
+msgid "Show stable gimpfusion info associated with this layer"
+msgstr "显示图层保存的 GimpFusion 生成信息"
+
+#: sg_plugins/layerinfo.py:36
+msgid "Selected layers have the following data associated with them:"
+msgstr "所选图层保存的数据："
+
+#: sg_plugins/lora_selector.py:27
+msgid "Search LoRA name or alias"
+msgstr "搜索 LoRA 名称或别名"
+
+#: sg_plugins/lora_selector.py:29
+msgid "Refresh LoRAs"
+msgstr "刷新 LoRA"
+
+#: sg_plugins/lora_selector.py:36
+msgid "LoRA name"
+msgstr "LoRA 名称"
+
+#: sg_plugins/lora_selector.py:36
+msgid "Alias"
+msgstr "别名"
+
+#: sg_plugins/lora_selector.py:50
+msgid "LoRA details"
+msgstr "LoRA 详情"
+
+#: sg_plugins/panel.py:72
+msgid "Open generation panel"
+msgstr "打开生成面板"
+
+#: sg_plugins/panel.py:73
+msgid "Open the persistent GimpFusion generation window"
+msgstr "打开 GimpFusion 常驻生成窗口"
+
+#: sg_plugins/panel.py:89
+msgid "Generate with current parameters"
+msgstr "按当前参数生成"
+
+#: sg_plugins/panel.py:90
+msgid "Generate on the current image using the panel mode and parameters"
+msgstr "使用面板中的模式和参数在当前图像中生成"
+
+#: sg_plugins/panel.py:122
+msgid "Connecting to Forge"
+msgstr "正在连接 Forge"
+
+#: sg_plugins/panel.py:206
+msgid "Target image"
+msgstr "目标图像"
+
+#: sg_plugins/panel.py:219
+msgid "Show a system notification after generation"
+msgstr "生成后显示系统通知"
+
+#: sg_plugins/panel.py:227
+msgid "Close"
+msgstr "关闭"
+
+#: sg_plugins/panel.py:282 sg_plugins/panel.py:449
+msgid "Closing panel"
+msgstr "正在关闭面板"
+
+#: sg_plugins/panel.py:285 sg_plugins/panel.py:299
+msgid "Generation is busy or needs input"
+msgstr "生成任务忙碌或需要补充输入"
+
+#: sg_plugins/panel.py:383 sg_plugins/panel.py:384 sg_plugins/panel.py:388
+#: sg_plugins/panel.py:389
+msgid "Generation interrupted"
+msgstr "生成已中断"
+
+#: sg_plugins/panel.py:392 sg_plugins/panel.py:398
+msgid "GimpFusion generation finished"
+msgstr "GimpFusion 生成完成"
+
+#: sg_plugins/panel.py:393
+#, python-brace-format
+msgid "Inserted {count} candidates into {name}"
+msgstr "已向 {name} 插入 {count} 张候选"
+
+#: sg_plugins/panel.py:399
+#, python-brace-format
+msgid "{name}: {count} candidates"
+msgstr "{name}：{count} 张候选"
+
+#: sg_plugins/panel.py:402
+msgid "Generation failed"
+msgstr "生成失败"
+
+#: sg_plugins/panel.py:412
+#, python-brace-format
+msgid "Notification failed with exit code {code}"
+msgstr "通知发送失败，退出码 {code}"
+
+#: sg_plugins/panel.py:414
+msgid "Notification timed out"
+msgstr "通知发送超时"
+
+#: sg_plugins/panel.py:416
+#, python-brace-format
+msgid "Notification failed: {error}"
+msgstr "通知发送失败：{error}"
+
+#: sg_plugins/panel.py:449
+msgid "Interrupting generation"
+msgstr "正在中断生成"
+
+#: sg_plugins/txt2img.py:7
+msgid "Text to image"
+msgstr "文生图"
+
+#: sg_plugins/txt2img.py:8
+msgid "Generate image from text"
+msgstr "根据提示词生成图像"

@@ -1,15 +1,19 @@
-xgettext -k_ -kgettext_lazy -kN_ -o locale/stable-gimpfusion3.pot \
---from-code=UTF-8 --package-name=stable-gimpfusion3 --package-version=0.1.0 \
---language=Python --copyright-holder=shsmad --add-comments=TRANSLATORS \
-stable-gimpfusion3.py sg_constants.py sg_generation.py sg_loras.py sg_sources.py sg_notifications.py sg_gtk_utils.py sg_plugins/*.py sg_proc_arguments.py sg_structures.py sg_utils.py
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")"
 
-# msginit -l ru -i locale/stable-gimpfusion3.pot -o locale/ru/LC_MESSAGES/stable-gimpfusion3.po
+xgettext -k_ -kadd_menu_branch:2 -o locale/stable-gimpfusion3.pot \
+  --from-code=UTF-8 --package-name=stable-gimpfusion3 --package-version=0.1.0 \
+  --language=Python --copyright-holder=shsmad --add-comments=TRANSLATORS \
+  stable-gimpfusion3.py sg_*.py sg_plugins/*.py
 
-# Обновить все переводы
-for lang in en it ru; do
-  if [ -f "locale/${lang}/LC_MESSAGES/stable-gimpfusion3.po" ]; then
-    msgmerge --backup=none -U "locale/${lang}/LC_MESSAGES/stable-gimpfusion3.po" locale/stable-gimpfusion3.pot
-    msgfmt "locale/${lang}/LC_MESSAGES/stable-gimpfusion3.po" \
-      -o "locale/${lang}/LC_MESSAGES/stable-gimpfusion3.mo"
-  fi
+for lang in en it ru zhcn; do
+  catalog="locale/${lang}/LC_MESSAGES/stable-gimpfusion3"
+  msgmerge --backup=none --no-fuzzy-matching -U "${catalog}.po" locale/stable-gimpfusion3.pot
+  msgcmp "${catalog}.po" locale/stable-gimpfusion3.pot
+  msgfmt --check --check-format "${catalog}.po" -o "${catalog}.mo"
 done
+
+# GIMP native menus use the standard Chinese locale name.
+mkdir -p locale/zh_CN/LC_MESSAGES
+cp locale/zhcn/LC_MESSAGES/stable-gimpfusion3.mo locale/zh_CN/LC_MESSAGES/stable-gimpfusion3.mo

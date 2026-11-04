@@ -13,6 +13,8 @@ import os
 
 from collections.abc import Callable
 
+from gi.repository import GLib
+
 DOMAIN = "stable-gimpfusion3"
 
 
@@ -22,8 +24,9 @@ def setup_i18n() -> Callable[[str], str]:
     plugin_dir = os.path.dirname(os.path.abspath(__file__))
     locale_dir = os.path.join(plugin_dir, "locale")
     locale.setlocale(locale.LC_ALL, "")
-    translation = gettext.translation(DOMAIN, locale_dir, fallback=True)
-    translation.install()
+    catalogs = {"en": "en", "it": "it", "ru": "ru", "zh_CN": "zhcn", "zhcn": "zhcn"}
+    language = next((catalogs[name] for name in GLib.get_language_names() if name in catalogs), "en")
+    translation = gettext.translation(DOMAIN, locale_dir, languages=[language])
     return translation.gettext
 
 

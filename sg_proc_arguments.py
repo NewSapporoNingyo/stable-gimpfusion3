@@ -8,7 +8,10 @@ from sg_utils import make_choice_from_list
 
 
 def PLUGIN_FIELDS_CHECKPOINT(
-    procedure: Gimp.Procedure, models: list[str], selected_model: str | None, sd_modules: list[str],
+    procedure: Gimp.Procedure,
+    models: list[str],
+    selected_model: str | None,
+    sd_modules: list[str],
 ) -> None:
     procedure.add_choice_argument(
         "model",
@@ -23,11 +26,12 @@ def PLUGIN_FIELDS_CHECKPOINT(
     procedure.add_choice_argument(
         "flux_encoders_mode",
         _("Add VAE and text encoders for Flux"),
-        _("""Add VAE and text encoders for Flux-based models:
-
-          Autoguess: Flux VAEs and text encoders will be added automatically based on model name
-          Never add: Flux VAEs and text encoders will never be added
-          Always add: Flux VAEs and text encoders will always be added"""),
+        _(
+            "Flux additional modules:\n"
+            "Autoguess: add the listed modules for Flux or GGUF model names.\n"
+            "Never add: use an empty additional-module list.\n"
+            "Always add: use the listed modules.",
+        ),
         make_choice_from_list(FLUX_ENCODERS_MODES),
         FLUX_ENCODERS_MODES[0],
         GObject.ParamFlags.READWRITE,
@@ -68,7 +72,7 @@ def PLUGIN_FIELDS_COMMON(procedure: Gimp.Procedure, samplers: list[str], selecte
     procedure.add_string_argument(
         "negative_prompt",
         _("Negative Prompt"),
-        _("A text description on what you don't want to see in the image "),
+        _("Features to reduce in the generated image"),
         "",
         GObject.ParamFlags.READWRITE,
     )
@@ -83,8 +87,8 @@ def PLUGIN_FIELDS_COMMON(procedure: Gimp.Procedure, samplers: list[str], selecte
     )
     procedure.add_int_argument(
         "batch_size",
-        _("Batch count"),
-        _("Specifies the number of results you want to get."),
+        _("Candidates"),
+        _("Number of candidate images generated in one batch"),
         1,
         20,
         1,
@@ -93,8 +97,7 @@ def PLUGIN_FIELDS_COMMON(procedure: Gimp.Procedure, samplers: list[str], selecte
     procedure.add_int_argument(
         "steps",
         _("Steps"),
-        _("""The number of denoising steps used by the AI model when generating an image from the text prompt.
-        A higher number results in longer generation time, and does not necessarily guarantee higher image quality."""),
+        _("Number of sampling steps; more steps increase generation time"),
         5,
         150,
         20,
@@ -103,7 +106,7 @@ def PLUGIN_FIELDS_COMMON(procedure: Gimp.Procedure, samplers: list[str], selecte
     procedure.add_int_argument(
         "mask_blur",
         _("Mask Blur"),
-        _("Feathering of a mask (from edges to inside the mask)"),
+        _("Gaussian blur radius in pixels on both sides of inpainting mask edges; applies to inpaint"),
         0,
         64,
         4,
@@ -130,12 +133,7 @@ def PLUGIN_FIELDS_COMMON(procedure: Gimp.Procedure, samplers: list[str], selecte
     procedure.add_double_argument(
         "cfg_scale",
         _("CFG Scale"),
-        _("""Governs how closely it follows the prompt. Lower values produce more creative results.
-7 or 7.5 usually works best. You can increase the value if the generated image doesn’t match your prompt.
-
-Low numbers (0-6 ish): You're telling SD that it can ignore your prompt.
-Mid-range (6-10 ish): You're telling SD you'd like it to do what you're asking, but you don't mind a bit of variation.
-High numbers (10+): We found that high cfg often results in a really bad image."""),
+        _("Strength of prompt guidance during sampling"),
         1,
         30,
         7,
@@ -144,20 +142,7 @@ High numbers (10+): We found that high cfg often results in a really bad image."
     procedure.add_double_argument(
         "denoising_strength",
         _("Denoising Strength"),
-        _("""Strength of image transfomation during inpainting precess.
-
-Determines how little respect the algorithm should have for image's content.
-At 0, nothing will change, and at 1 you'll get an unrelated image.
-
-High means more influence during transformation.
-A value between 0.5 and 1 is optimal for maintaining image consistency.
-
-
-0.0: No change
-0.35: Slight change
-0.75: Quite a change
-1.0: Most changes
-"""),
+        _("Amount of change to the source image in img2img and inpaint; higher values allow larger changes"),
         0,
         1,
         0.75,
@@ -181,7 +166,7 @@ A value between 0.5 and 1 is optimal for maintaining image consistency.
     procedure.add_boolean_argument(
         "tiling",
         _("Tiling"),
-        _("Tiling will improve image quality and speed, but may cause artifacts"),
+        _("Generate a texture with seamless edges for tiling"),
         False,
         GObject.ParamFlags.READWRITE,
     )
@@ -189,14 +174,15 @@ A value between 0.5 and 1 is optimal for maintaining image consistency.
     procedure.add_choice_argument(
         "insert_mode",
         _("Insert mode"),
-        _("""How to insert generated image:
-
-Scale to fill — generated image heights and widths are stretched to match the size of selection (default)
-Insert as is — insert generated image with generation size at selection left-top coords
-Aspect fill — longest side of generated image is proportionnaly stretched to match the selection
-Aspect fit — shortest side of generated image is proportionnaly stretched to match the selection
-Use selection size — try to generate image of selection size (instead of input sizes)
-        """),
+        _(
+            "Placement in txt2img:\n"
+            "Resize to selection: stretch to the selection dimensions.\n"
+            "Insert as is: keep the generated dimensions.\n"
+            "Aspect fill: scale proportionally to cover the selection.\n"
+            "Aspect fit: scale proportionally to fit inside the selection.\n"
+            "Use selection size: generate at the selection dimensions rounded to multiples of 8.\n"
+            "Results are placed at the selection top-left corner.",
+        ),
         make_choice_from_list(INSERT_MODES),
         INSERT_MODES[0],
         GObject.ParamFlags.READWRITE,
@@ -234,8 +220,11 @@ def PLUGIN_FIELDS_CONTROLNET_OPTIONS(procedure: Gimp.Procedure) -> None:
     )
     procedure.add_boolean_argument(
         "cn_skip_annotator_layers",
-        _("Skip annotator layers"),
-        _("Skip annotator layers (something that I don't know what it does)"),
+        _("Import candidates only"),
+        _(
+            "Enabled: import generated candidates. Disabled: also import ControlNet preprocessing or reference images. "
+            "Applies to all three modes.",
+        ),
         True,
         GObject.ParamFlags.READWRITE,
     )
@@ -245,16 +234,13 @@ def PLUGIN_FIELDS_RESIZE_MODE(procedure: Gimp.Procedure, resize_modes: list[str]
     procedure.add_choice_argument(
         "resize_mode",
         _("Resize Mode"),
-        _("""Resize Mode
-
-Just resize: Simply resizes the image to target dimensions.The aspect ratio is not maintained, so the image will stretch or shrink if the aspect ratio of the destination size is different.
-
-Crop and resize: Crops the image to maintain aspect ratio, then resizes. The aspect ratio is maintained and the overhang is removed.
-
-Resize and fill: Resizes and fills empty areas with content. The image is scaled to fit the specified destination size while maintaining the aspect ratio. The excess area will be filled with the color of the edge of the input image.
-
-Just resize (latent upscale): Resizes in the latent space. Same as Just Resize, but uses Latent Upscale for scaling.
-        """),  # noqa: E501
+        _(
+            "Resizing in img2img and inpaint:\n"
+            "Just Resize: stretch to the requested dimensions.\n"
+            "Crop And Resize: scale proportionally to cover the frame, then crop.\n"
+            "Resize And Fill: fit inside the frame and extend the edge colors.\n"
+            "Just Resize (Latent Upscale): resize in latent space.",
+        ),  # noqa: E501
         make_choice_from_list(resize_modes),
         resize_modes[0],
         GObject.ParamFlags.READWRITE,
@@ -265,15 +251,17 @@ def PLUGIN_FIELDS_INPAINTING(procedure: Gimp.Procedure, inpaint_fill_modes: list
     procedure.add_boolean_argument(
         "invert_mask",
         _("Invert Mask"),
-        _("Determines whether you want to inpaint the masked object or outside of the masked object"),
+        _("Enabled: repaint the black mask area. Disabled: repaint the white mask area."),
         False,
         GObject.ParamFlags.READWRITE,
     )
     procedure.add_boolean_argument(
         "inpaint_full_res",
         _("Inpaint area"),
-        _("Whole picture samples the entire source; "
-          "Only masked samples the mask area and composites it into the source"),
+        _(
+            "Whole picture samples the entire source; "
+            "Only masked samples the mask area and composites it into the source",
+        ),
         False,
         GObject.ParamFlags.READWRITE,
     )
@@ -289,13 +277,13 @@ def PLUGIN_FIELDS_INPAINTING(procedure: Gimp.Procedure, inpaint_fill_modes: list
     procedure.add_choice_argument(
         "inpainting_fill",
         _("Mask fill mode"),
-        _("""Choose the fill content in mask
-
-fill: Fills the input image with the average color within the masked area. Good for removing objects.
-original: The input image is used as is.
-latent noise: Fills the masked area with Seed-based noise. It can be used to mask an object and rewrite the background. 1 is recommended for CGF.
-latent nothing: Fills the masked area with the average color of the masked area. It can be used to mask an object and rewrite the background. 0.8 or higher is recommended for CGF.
-        """),  # noqa: E501
+        _(
+            "Initial content in the inpainting mask:\n"
+            "fill: fill using surrounding colors.\n"
+            "original: use the source content.\n"
+            "latent noise: initialize with seeded latent noise.\n"
+            "latent nothing: initialize the masked latent values to zero.",
+        ),  # noqa: E501
         make_choice_from_list(inpaint_fill_modes),
         "original",
         GObject.ParamFlags.READWRITE,
@@ -310,24 +298,63 @@ def PLUGIN_FIELDS_CONTROLNET(
     control_modes: list[str],
     prefix: str = "",
 ) -> None:
-    for name, label, choices in (
-        ("module", _("Module"), cn_modules), ("model", _("Model"), cn_models),
-        ("resize_mode", _("Resize Mode"), cn_resize_modes), ("control_mode", _("Control Mode"), control_modes),
+    for name, label, help_text, choices in (
+        ("module", _("Module"), _("ControlNet preprocessor applied to the input layer"), cn_modules),
+        ("model", _("Model"), _("ControlNet model paired with the preprocessor"), cn_models),
+        ("resize_mode", _("Resize Mode"), _("Fit the ControlNet input to the generation frame"), cn_resize_modes),
+        ("control_mode", _("Control Mode"), _("Balance prompt guidance and ControlNet guidance"), control_modes),
     ):
         procedure.add_choice_argument(
-            prefix + name, label, label, make_choice_from_list(choices), choices[0], GObject.ParamFlags.READWRITE,
+            prefix + name,
+            label,
+            help_text,
+            make_choice_from_list(choices),
+            choices[0],
+            GObject.ParamFlags.READWRITE,
         )
-    for name, label, minimum, maximum, value in (
-        ("weight", _("Weight"), 0, 2, 1),
-        ("guidance_start", _("Guidance Start (T)"), 0, 1, 0),
-        ("guidance_end", _("Guidance End (T)"), 0, 1, 1),
-        ("threshold_a", _("Threshold A"), -1, 2048, 64),
-        ("threshold_b", _("Threshold B"), -1, 2048, 64),
+    for name, label, help_text, minimum, maximum, value in (
+        ("weight", _("Weight"), _("Strength of the ControlNet condition"), 0, 2, 1),
+        (
+            "guidance_start",
+            _("Guidance Start (T)"),
+            _("Sampling progress at which ControlNet starts; 0 is the beginning"),
+            0,
+            1,
+            0,
+        ),
+        ("guidance_end", _("Guidance End (T)"), _("Sampling progress at which ControlNet ends; 1 is the end"), 0, 1, 1),
+        (
+            "threshold_a",
+            _("Threshold A"),
+            _("First preprocessor parameter; meaning and range depend on the selected module"),
+            -1,
+            2048,
+            64,
+        ),
+        (
+            "threshold_b",
+            _("Threshold B"),
+            _("Second preprocessor parameter; meaning and range depend on the selected module"),
+            -1,
+            2048,
+            64,
+        ),
     ):
         procedure.add_double_argument(
-            prefix + name, label, label, minimum, maximum, value, GObject.ParamFlags.READWRITE,
+            prefix + name,
+            label,
+            help_text,
+            minimum,
+            maximum,
+            value,
+            GObject.ParamFlags.READWRITE,
         )
     procedure.add_int_argument(
-        prefix + "processor_res", _("Processor Resolution"), _("ControlNet preprocessing resolution"),
-        64, 2048, 512, GObject.ParamFlags.READWRITE,
+        prefix + "processor_res",
+        _("Processor Resolution"),
+        _("ControlNet preprocessing resolution"),
+        64,
+        2048,
+        512,
+        GObject.ParamFlags.READWRITE,
     )

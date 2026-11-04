@@ -8,21 +8,348 @@ msgid ""
 msgstr ""
 "Project-Id-Version: stable-gimpfusion3 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-03 22:08+0900\n"
+"POT-Creation-Date: 2026-11-04 12:44+0900\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
+
+#: stable-gimpfusion3.py:58
+msgid "Config"
+msgstr ""
 
 #: sg_generation.py:71
 msgid "Seed must be an integer from -1 to 4294967295"
 msgstr ""
 
-#: sg_generation.py:77 sg_plugins/generation_base.py:457
+#: sg_generation.py:77 sg_plugins/generation_base.py:440
 msgid "Width and height must be positive multiples of 8"
+msgstr ""
+
+#: sg_proc_arguments.py:18 sg_proc_arguments.py:303
+#: sg_plugins/generation_base.py:109
+msgid "Model"
+msgstr ""
+
+#: sg_proc_arguments.py:19 sg_plugins/generation_base.py:109
+msgid "Model to use for inference"
+msgstr ""
+
+#: sg_proc_arguments.py:28
+msgid "Add VAE and text encoders for Flux"
+msgstr ""
+
+#: sg_proc_arguments.py:30
+msgid ""
+"Flux additional modules:\n"
+"Autoguess: add the listed modules for Flux or GGUF model names.\n"
+"Never add: use an empty additional-module list.\n"
+"Always add: use the listed modules."
+msgstr ""
+
+#: sg_proc_arguments.py:57
+msgid "Flux VAEs and text encoders"
+msgstr ""
+
+#: sg_proc_arguments.py:58
+msgid "Flux VAEs and text encoders to use for Flux-based models"
+msgstr ""
+
+#: sg_proc_arguments.py:67
+msgid "Prompt"
+msgstr ""
+
+#: sg_proc_arguments.py:68
+msgid "A text string that describes the image you want to generate"
+msgstr ""
+
+#: sg_proc_arguments.py:74
+msgid "Negative Prompt"
+msgstr ""
+
+#: sg_proc_arguments.py:75
+msgid "Features to reduce in the generated image"
+msgstr ""
+
+#: sg_proc_arguments.py:81
+msgid "Seed"
+msgstr ""
+
+#: sg_proc_arguments.py:82
+msgid "Seed: -1 for random, 0 or a positive integer for a fixed result"
+msgstr ""
+
+#: sg_proc_arguments.py:90
+msgid "Candidates"
+msgstr ""
+
+#: sg_proc_arguments.py:91
+msgid "Number of candidate images generated in one batch"
+msgstr ""
+
+#: sg_proc_arguments.py:99
+msgid "Steps"
+msgstr ""
+
+#: sg_proc_arguments.py:100
+msgid "Number of sampling steps; more steps increase generation time"
+msgstr ""
+
+#: sg_proc_arguments.py:108
+msgid "Mask Blur"
+msgstr ""
+
+#: sg_proc_arguments.py:109
+msgid ""
+"Gaussian blur radius in pixels on both sides of inpainting mask edges; "
+"applies to inpaint"
+msgstr ""
+
+#: sg_proc_arguments.py:117
+msgid "Width"
+msgstr ""
+
+#: sg_proc_arguments.py:118
+msgid "Width of the image you want to generate"
+msgstr ""
+
+#: sg_proc_arguments.py:126
+msgid "Height"
+msgstr ""
+
+#: sg_proc_arguments.py:127
+msgid "Height of the image that you want to generate"
+msgstr ""
+
+#: sg_proc_arguments.py:135
+msgid "CFG Scale"
+msgstr ""
+
+#: sg_proc_arguments.py:136
+msgid "Strength of prompt guidance during sampling"
+msgstr ""
+
+#: sg_proc_arguments.py:144
+msgid "Denoising Strength"
+msgstr ""
+
+#: sg_proc_arguments.py:145
+msgid ""
+"Amount of change to the source image in img2img and inpaint; higher values "
+"allow larger changes"
+msgstr ""
+
+#: sg_proc_arguments.py:153
+msgid "Sampler"
+msgstr ""
+
+#: sg_proc_arguments.py:154
+msgid "Sampler to use"
+msgstr ""
+
+#: sg_proc_arguments.py:161
+msgid "Restore faces"
+msgstr ""
+
+#: sg_proc_arguments.py:162
+msgid "Use GFPGAN / CodeFormer to restore faces"
+msgstr ""
+
+#: sg_proc_arguments.py:168
+msgid "Tiling"
+msgstr ""
+
+#: sg_proc_arguments.py:169
+msgid "Generate a texture with seamless edges for tiling"
+msgstr ""
+
+#: sg_proc_arguments.py:176
+msgid "Insert mode"
+msgstr ""
+
+#: sg_proc_arguments.py:178
+msgid ""
+"Placement in txt2img:\n"
+"Resize to selection: stretch to the selection dimensions.\n"
+"Insert as is: keep the generated dimensions.\n"
+"Aspect fill: scale proportionally to cover the selection.\n"
+"Aspect fit: scale proportionally to fit inside the selection.\n"
+"Use selection size: generate at the selection dimensions rounded to "
+"multiples of 8.\n"
+"Results are placed at the selection top-left corner."
+msgstr ""
+
+#: sg_proc_arguments.py:195
+msgid "Enable ControlNet 1"
+msgstr ""
+
+#: sg_proc_arguments.py:196
+msgid "Enable ControlNet 1 for generation"
+msgstr ""
+
+#: sg_proc_arguments.py:202
+msgid "ControlNet 1 Layer"
+msgstr ""
+
+#: sg_proc_arguments.py:203
+msgid "ControlNet 1 Layer for generation"
+msgstr ""
+
+#: sg_proc_arguments.py:209
+msgid "Enable ControlNet 2"
+msgstr ""
+
+#: sg_proc_arguments.py:210
+msgid "Enable ControlNet 2 for generation"
+msgstr ""
+
+#: sg_proc_arguments.py:216
+msgid "ControlNet 2 Layer"
+msgstr ""
+
+#: sg_proc_arguments.py:217
+msgid "ControlNet 2 Layer for generation"
+msgstr ""
+
+#: sg_proc_arguments.py:223
+msgid "Import candidates only"
+msgstr ""
+
+#: sg_proc_arguments.py:225
+msgid ""
+"Enabled: import generated candidates. Disabled: also import ControlNet "
+"preprocessing or reference images. Applies to all three modes."
+msgstr ""
+
+#: sg_proc_arguments.py:236 sg_proc_arguments.py:304
+msgid "Resize Mode"
+msgstr ""
+
+#: sg_proc_arguments.py:238
+msgid ""
+"Resizing in img2img and inpaint:\n"
+"Just Resize: stretch to the requested dimensions.\n"
+"Crop And Resize: scale proportionally to cover the frame, then crop.\n"
+"Resize And Fill: fit inside the frame and extend the edge colors.\n"
+"Just Resize (Latent Upscale): resize in latent space."
+msgstr ""
+
+#: sg_proc_arguments.py:253
+msgid "Invert Mask"
+msgstr ""
+
+#: sg_proc_arguments.py:254
+msgid ""
+"Enabled: repaint the black mask area. Disabled: repaint the white mask area."
+msgstr ""
+
+#: sg_proc_arguments.py:260 sg_plugins/generation_base.py:357
+msgid "Inpaint area"
+msgstr ""
+
+#: sg_proc_arguments.py:262
+msgid ""
+"Whole picture samples the entire source; Only masked samples the mask area "
+"and composites it into the source"
+msgstr ""
+
+#: sg_proc_arguments.py:270
+msgid "Only masked padding, pixels"
+msgstr ""
+
+#: sg_proc_arguments.py:271
+msgid "Context added around the mask before sampling in Only masked mode"
+msgstr ""
+
+#: sg_proc_arguments.py:279
+msgid "Mask fill mode"
+msgstr ""
+
+#: sg_proc_arguments.py:281
+msgid ""
+"Initial content in the inpainting mask:\n"
+"fill: fill using surrounding colors.\n"
+"original: use the source content.\n"
+"latent noise: initialize with seeded latent noise.\n"
+"latent nothing: initialize the masked latent values to zero."
+msgstr ""
+
+#: sg_proc_arguments.py:302
+msgid "Module"
+msgstr ""
+
+#: sg_proc_arguments.py:302
+msgid "ControlNet preprocessor applied to the input layer"
+msgstr ""
+
+#: sg_proc_arguments.py:303
+msgid "ControlNet model paired with the preprocessor"
+msgstr ""
+
+#: sg_proc_arguments.py:304
+msgid "Fit the ControlNet input to the generation frame"
+msgstr ""
+
+#: sg_proc_arguments.py:305
+msgid "Control Mode"
+msgstr ""
+
+#: sg_proc_arguments.py:305
+msgid "Balance prompt guidance and ControlNet guidance"
+msgstr ""
+
+#: sg_proc_arguments.py:316
+msgid "Weight"
+msgstr ""
+
+#: sg_proc_arguments.py:316
+msgid "Strength of the ControlNet condition"
+msgstr ""
+
+#: sg_proc_arguments.py:319
+msgid "Guidance Start (T)"
+msgstr ""
+
+#: sg_proc_arguments.py:320
+msgid "Sampling progress at which ControlNet starts; 0 is the beginning"
+msgstr ""
+
+#: sg_proc_arguments.py:325
+msgid "Guidance End (T)"
+msgstr ""
+
+#: sg_proc_arguments.py:325
+msgid "Sampling progress at which ControlNet ends; 1 is the end"
+msgstr ""
+
+#: sg_proc_arguments.py:328
+msgid "Threshold A"
+msgstr ""
+
+#: sg_proc_arguments.py:329
+msgid ""
+"First preprocessor parameter; meaning and range depend on the selected module"
+msgstr ""
+
+#: sg_proc_arguments.py:336
+msgid "Threshold B"
+msgstr ""
+
+#: sg_proc_arguments.py:337
+msgid ""
+"Second preprocessor parameter; meaning and range depend on the selected "
+"module"
+msgstr ""
+
+#: sg_proc_arguments.py:354
+msgid "Processor Resolution"
+msgstr ""
+
+#: sg_proc_arguments.py:355
+msgid "ControlNet preprocessing resolution"
 msgstr ""
 
 #: sg_sources.py:94
@@ -39,6 +366,15 @@ msgstr ""
 
 #: sg_sources.py:130
 msgid "Provide a mask with an area to inpaint within the source layer"
+msgstr ""
+
+#: sg_structures.py:97
+#, python-brace-format
+msgid "Generated Layer {seed}"
+msgstr ""
+
+#: sg_structures.py:101
+msgid "ControlNet auxiliary layer"
 msgstr ""
 
 #: sg_plugins/config.py:25
@@ -127,17 +463,8 @@ msgstr ""
 msgid "Target image closed; task finished"
 msgstr ""
 
-#: sg_plugins/generation_base.py:104
+#: sg_plugins/generation_base.py:104 sg_plugins/panel.py:56
 msgid "Generation mode"
-msgstr ""
-
-#: sg_plugins/generation_base.py:109 sg_proc_arguments.py:15
-#: sg_proc_arguments.py:314
-msgid "Model"
-msgstr ""
-
-#: sg_plugins/generation_base.py:109 sg_proc_arguments.py:16
-msgid "Model to use for inference"
 msgstr ""
 
 #: sg_plugins/generation_base.py:135 sg_plugins/generation_base.py:139
@@ -150,179 +477,175 @@ msgstr ""
 msgid "Unavailable generation option: {field} = {value}"
 msgstr ""
 
-#: sg_plugins/generation_base.py:214 sg_plugins/generation_base.py:654
+#: sg_plugins/generation_base.py:197 sg_plugins/generation_base.py:637
 msgid "Select a ControlNet input layer from the current image"
 msgstr ""
 
-#: sg_plugins/generation_base.py:233 sg_plugins/panel.py:284
-#: sg_plugins/panel.py:285
+#: sg_plugins/generation_base.py:216 sg_plugins/panel.py:327
+#: sg_plugins/panel.py:328
 msgid "Generating image"
 msgstr ""
 
-#: sg_plugins/generation_base.py:240 sg_plugins/panel.py:315
+#: sg_plugins/generation_base.py:223 sg_plugins/panel.py:358
 #, python-brace-format
 msgid "Progress: {progress}%, ETA: {eta}s"
 msgstr ""
 
-#: sg_plugins/generation_base.py:246
+#: sg_plugins/generation_base.py:229
 msgid "Inserting layers from response"
 msgstr ""
 
-#: sg_plugins/generation_base.py:268 sg_plugins/panel.py:89
+#: sg_plugins/generation_base.py:251 sg_plugins/panel.py:116
 msgid "GimpFusion generation"
 msgstr ""
 
-#: sg_plugins/generation_base.py:269 sg_plugins/panel.py:194
+#: sg_plugins/generation_base.py:252 sg_plugins/panel.py:226
 msgid "Generate"
 msgstr ""
 
-#: sg_plugins/generation_base.py:286
+#: sg_plugins/generation_base.py:269
 msgid "Save file"
 msgstr ""
 
-#: sg_plugins/generation_base.py:287
+#: sg_plugins/generation_base.py:270
 msgid "Save file as"
 msgstr ""
 
-#: sg_plugins/generation_base.py:288
+#: sg_plugins/generation_base.py:271
 msgid "Save to image"
 msgstr ""
 
-#: sg_plugins/generation_base.py:289
+#: sg_plugins/generation_base.py:272
 msgid "Load from image"
 msgstr ""
 
-#: sg_plugins/generation_base.py:292
+#: sg_plugins/generation_base.py:275
 msgid "Load file"
 msgstr ""
 
-#: sg_plugins/generation_base.py:323
+#: sg_plugins/generation_base.py:306
 msgid "Generation settings"
 msgstr ""
 
-#: sg_plugins/generation_base.py:326
+#: sg_plugins/generation_base.py:309
 msgid "Input source"
 msgstr ""
 
-#: sg_plugins/generation_base.py:353
+#: sg_plugins/generation_base.py:336
 msgid "Generation parameters"
 msgstr ""
 
-#: sg_plugins/generation_base.py:374 sg_proc_arguments.py:274
-msgid "Inpaint area"
-msgstr ""
-
-#: sg_plugins/generation_base.py:374
+#: sg_plugins/generation_base.py:357
 msgid "Only masked"
 msgstr ""
 
-#: sg_plugins/generation_base.py:374
+#: sg_plugins/generation_base.py:357
 msgid "Whole picture"
 msgstr ""
 
-#: sg_plugins/generation_base.py:384
+#: sg_plugins/generation_base.py:367
 #, python-brace-format
 msgid "ControlNet {slot} parameters"
 msgstr ""
 
-#: sg_plugins/generation_base.py:388
+#: sg_plugins/generation_base.py:371
 msgid "Read layer settings"
 msgstr ""
 
-#: sg_plugins/generation_base.py:424
+#: sg_plugins/generation_base.py:407
 #, python-brace-format
 msgid "File: {name}"
 msgstr ""
 
-#: sg_plugins/generation_base.py:426
+#: sg_plugins/generation_base.py:409
 #, python-brace-format
 msgid "Settings from image: {name}"
 msgstr ""
 
-#: sg_plugins/generation_base.py:428
+#: sg_plugins/generation_base.py:411
 msgid "Unsaved parameters"
 msgstr ""
 
-#: sg_plugins/generation_base.py:489
+#: sg_plugins/generation_base.py:472
 #, python-brace-format
 msgid ""
 "Request: {width} x {height}; insertion area: {area_width} x {area_height}"
 msgstr ""
 
-#: sg_plugins/generation_base.py:502
+#: sg_plugins/generation_base.py:485
 msgid "Select a target image"
 msgstr ""
 
-#: sg_plugins/generation_base.py:518
+#: sg_plugins/generation_base.py:501
 #, python-brace-format
 msgid "Target image: {name}"
 msgstr ""
 
-#: sg_plugins/generation_base.py:520
+#: sg_plugins/generation_base.py:503
 #, python-brace-format
 msgid "Selection: ({x}, {y}), {width} x {height}"
 msgstr ""
 
-#: sg_plugins/generation_base.py:522
+#: sg_plugins/generation_base.py:505
 msgid "Selection: whole image"
 msgstr ""
 
-#: sg_plugins/generation_base.py:526
+#: sg_plugins/generation_base.py:509
 #, python-brace-format
 msgid "Source layer: {name}"
 msgstr ""
 
-#: sg_plugins/generation_base.py:527
+#: sg_plugins/generation_base.py:510
 #, python-brace-format
 msgid "Source: {width} x {height}; offset: ({x}, {y})"
 msgstr ""
 
-#: sg_plugins/generation_base.py:535
+#: sg_plugins/generation_base.py:518
 msgid "Current selection"
 msgstr ""
 
-#: sg_plugins/generation_base.py:535
+#: sg_plugins/generation_base.py:518
 msgid "Source layer mask"
 msgstr ""
 
-#: sg_plugins/generation_base.py:535
+#: sg_plugins/generation_base.py:518
 msgid "Create a mask"
 msgstr ""
 
-#: sg_plugins/generation_base.py:536
+#: sg_plugins/generation_base.py:519
 #, python-brace-format
 msgid "Mask source: {name}"
 msgstr ""
 
-#: sg_plugins/generation_base.py:558
+#: sg_plugins/generation_base.py:541
 msgid "Save generation settings"
 msgstr ""
 
-#: sg_plugins/generation_base.py:558
+#: sg_plugins/generation_base.py:541
 msgid "Load generation settings"
 msgstr ""
 
-#: sg_plugins/generation_base.py:559
+#: sg_plugins/generation_base.py:542
 msgid "Save"
 msgstr ""
 
-#: sg_plugins/generation_base.py:559
+#: sg_plugins/generation_base.py:542
 msgid "Open"
 msgstr ""
 
-#: sg_plugins/generation_base.py:559
+#: sg_plugins/generation_base.py:542
 msgid "Cancel"
 msgstr ""
 
-#: sg_plugins/generation_base.py:562
+#: sg_plugins/generation_base.py:545
 msgid "Generation settings (*.txt)"
 msgstr ""
 
-#: sg_plugins/generation_base.py:628
+#: sg_plugins/generation_base.py:611
 msgid "Could not save generation settings to the image"
 msgstr ""
 
-#: sg_plugins/generation_base.py:638
+#: sg_plugins/generation_base.py:621
 msgid "The current image has no generation settings"
 msgstr ""
 
@@ -374,84 +697,84 @@ msgstr ""
 msgid "LoRA details"
 msgstr ""
 
-#: sg_plugins/panel.py:34
+#: sg_plugins/panel.py:72
 msgid "Open generation panel"
 msgstr ""
 
-#: sg_plugins/panel.py
-msgid "Generate with current parameters"
-msgstr ""
-
-#: sg_plugins/panel.py
-msgid "Generate on the current image using the panel mode and parameters"
-msgstr ""
-
-#: sg_plugins/panel.py:35
+#: sg_plugins/panel.py:73
 msgid "Open the persistent GimpFusion generation window"
 msgstr ""
 
-#: sg_plugins/panel.py:95
+#: sg_plugins/panel.py:89
+msgid "Generate with current parameters"
+msgstr ""
+
+#: sg_plugins/panel.py:90
+msgid "Generate on the current image using the panel mode and parameters"
+msgstr ""
+
+#: sg_plugins/panel.py:122
 msgid "Connecting to Forge"
 msgstr ""
 
-#: sg_plugins/panel.py:174
+#: sg_plugins/panel.py:206
 msgid "Target image"
 msgstr ""
 
-#: sg_plugins/panel.py:187
+#: sg_plugins/panel.py:219
 msgid "Show a system notification after generation"
 msgstr ""
 
-#: sg_plugins/panel.py:195
+#: sg_plugins/panel.py:227
 msgid "Close"
 msgstr ""
 
-#: sg_plugins/panel.py:252 sg_plugins/panel.py:406
+#: sg_plugins/panel.py:282 sg_plugins/panel.py:449
 msgid "Closing panel"
 msgstr ""
 
-#: sg_plugins/panel.py:256
+#: sg_plugins/panel.py:285 sg_plugins/panel.py:299
 msgid "Generation is busy or needs input"
 msgstr ""
 
-#: sg_plugins/panel.py:340 sg_plugins/panel.py:341 sg_plugins/panel.py:345
-#: sg_plugins/panel.py:346
+#: sg_plugins/panel.py:383 sg_plugins/panel.py:384 sg_plugins/panel.py:388
+#: sg_plugins/panel.py:389
 msgid "Generation interrupted"
 msgstr ""
 
-#: sg_plugins/panel.py:349 sg_plugins/panel.py:355
+#: sg_plugins/panel.py:392 sg_plugins/panel.py:398
 msgid "GimpFusion generation finished"
 msgstr ""
 
-#: sg_plugins/panel.py:350
+#: sg_plugins/panel.py:393
 #, python-brace-format
 msgid "Inserted {count} candidates into {name}"
 msgstr ""
 
-#: sg_plugins/panel.py:356
+#: sg_plugins/panel.py:399
 #, python-brace-format
 msgid "{name}: {count} candidates"
 msgstr ""
 
-#: sg_plugins/panel.py:359
+#: sg_plugins/panel.py:402
 msgid "Generation failed"
 msgstr ""
 
-#: sg_plugins/panel.py:369
+#: sg_plugins/panel.py:412
 #, python-brace-format
 msgid "Notification failed with exit code {code}"
 msgstr ""
 
-#: sg_plugins/panel.py:371
+#: sg_plugins/panel.py:414
 msgid "Notification timed out"
 msgstr ""
 
-#: sg_plugins/panel.py:373
+#: sg_plugins/panel.py:416
 #, python-brace-format
 msgid "Notification failed: {error}"
 msgstr ""
 
-#: sg_plugins/panel.py:406
+#: sg_plugins/panel.py:449
 msgid "Interrupting generation"
 msgstr ""
 
@@ -461,323 +784,4 @@ msgstr ""
 
 #: sg_plugins/txt2img.py:8
 msgid "Generate image from text"
-msgstr ""
-
-#: sg_proc_arguments.py:25
-msgid "Add VAE and text encoders for Flux"
-msgstr ""
-
-#: sg_proc_arguments.py:26
-msgid ""
-"Add VAE and text encoders for Flux-based models:\n"
-"\n"
-"          Autoguess: Flux VAEs and text encoders will be added automatically "
-"based on model name\n"
-"          Never add: Flux VAEs and text encoders will never be added\n"
-"          Always add: Flux VAEs and text encoders will always be added"
-msgstr ""
-
-#: sg_proc_arguments.py:53
-msgid "Flux VAEs and text encoders"
-msgstr ""
-
-#: sg_proc_arguments.py:54
-msgid "Flux VAEs and text encoders to use for Flux-based models"
-msgstr ""
-
-#: sg_proc_arguments.py:63
-msgid "Prompt"
-msgstr ""
-
-#: sg_proc_arguments.py:64
-msgid "A text string that describes the image you want to generate"
-msgstr ""
-
-#: sg_proc_arguments.py:70
-msgid "Negative Prompt"
-msgstr ""
-
-#: sg_proc_arguments.py:71
-msgid "A text description on what you don't want to see in the image "
-msgstr ""
-
-#: sg_proc_arguments.py:77
-msgid "Seed"
-msgstr ""
-
-#: sg_proc_arguments.py:78
-msgid "Seed: -1 for random, 0 or a positive integer for a fixed result"
-msgstr ""
-
-#: sg_proc_arguments.py:86
-msgid "Batch count"
-msgstr ""
-
-#: sg_proc_arguments.py:87
-msgid "Specifies the number of results you want to get."
-msgstr ""
-
-#: sg_proc_arguments.py:95
-msgid "Steps"
-msgstr ""
-
-#: sg_proc_arguments.py:96
-msgid ""
-"The number of denoising steps used by the AI model when generating an image "
-"from the text prompt.\n"
-"        A higher number results in longer generation time, and does not "
-"necessarily guarantee higher image quality."
-msgstr ""
-
-#: sg_proc_arguments.py:105
-msgid "Mask Blur"
-msgstr ""
-
-#: sg_proc_arguments.py:106
-msgid "Feathering of a mask (from edges to inside the mask)"
-msgstr ""
-
-#: sg_proc_arguments.py:114
-msgid "Width"
-msgstr ""
-
-#: sg_proc_arguments.py:115
-msgid "Width of the image you want to generate"
-msgstr ""
-
-#: sg_proc_arguments.py:123
-msgid "Height"
-msgstr ""
-
-#: sg_proc_arguments.py:124
-msgid "Height of the image that you want to generate"
-msgstr ""
-
-#: sg_proc_arguments.py:132
-msgid "CFG Scale"
-msgstr ""
-
-#: sg_proc_arguments.py:133
-msgid ""
-"Governs how closely it follows the prompt. Lower values produce more "
-"creative results.\n"
-"7 or 7.5 usually works best. You can increase the value if the generated "
-"image doesn’t match your prompt.\n"
-"\n"
-"Low numbers (0-6 ish): You're telling SD that it can ignore your prompt.\n"
-"Mid-range (6-10 ish): You're telling SD you'd like it to do what you're "
-"asking, but you don't mind a bit of variation.\n"
-"High numbers (10+): We found that high cfg often results in a really bad "
-"image."
-msgstr ""
-
-#: sg_proc_arguments.py:146
-msgid "Denoising Strength"
-msgstr ""
-
-#: sg_proc_arguments.py:147
-msgid ""
-"Strength of image transfomation during inpainting precess.\n"
-"\n"
-"Determines how little respect the algorithm should have for image's "
-"content.\n"
-"At 0, nothing will change, and at 1 you'll get an unrelated image.\n"
-"\n"
-"High means more influence during transformation.\n"
-"A value between 0.5 and 1 is optimal for maintaining image consistency.\n"
-"\n"
-"\n"
-"0.0: No change\n"
-"0.35: Slight change\n"
-"0.75: Quite a change\n"
-"1.0: Most changes\n"
-msgstr ""
-
-#: sg_proc_arguments.py:168
-msgid "Sampler"
-msgstr ""
-
-#: sg_proc_arguments.py:169
-msgid "Sampler to use"
-msgstr ""
-
-#: sg_proc_arguments.py:176
-msgid "Restore faces"
-msgstr ""
-
-#: sg_proc_arguments.py:177
-msgid "Use GFPGAN / CodeFormer to restore faces"
-msgstr ""
-
-#: sg_proc_arguments.py:183
-msgid "Tiling"
-msgstr ""
-
-#: sg_proc_arguments.py:184
-msgid "Tiling will improve image quality and speed, but may cause artifacts"
-msgstr ""
-
-#: sg_proc_arguments.py:191
-msgid "Insert mode"
-msgstr ""
-
-#: sg_proc_arguments.py:192
-msgid ""
-"How to insert generated image:\n"
-"\n"
-"Scale to fill — generated image heights and widths are stretched to match "
-"the size of selection (default)\n"
-"Insert as is — insert generated image with generation size at selection left-"
-"top coords\n"
-"Aspect fill — longest side of generated image is proportionnaly stretched to "
-"match the selection\n"
-"Aspect fit — shortest side of generated image is proportionnaly stretched to "
-"match the selection\n"
-"Use selection size — try to generate image of selection size (instead of "
-"input sizes)\n"
-"        "
-msgstr ""
-
-#: sg_proc_arguments.py:209
-msgid "Enable ControlNet 1"
-msgstr ""
-
-#: sg_proc_arguments.py:210
-msgid "Enable ControlNet 1 for generation"
-msgstr ""
-
-#: sg_proc_arguments.py:216
-msgid "ControlNet 1 Layer"
-msgstr ""
-
-#: sg_proc_arguments.py:217
-msgid "ControlNet 1 Layer for generation"
-msgstr ""
-
-#: sg_proc_arguments.py:223
-msgid "Enable ControlNet 2"
-msgstr ""
-
-#: sg_proc_arguments.py:224
-msgid "Enable ControlNet 2 for generation"
-msgstr ""
-
-#: sg_proc_arguments.py:230
-msgid "ControlNet 2 Layer"
-msgstr ""
-
-#: sg_proc_arguments.py:231
-msgid "ControlNet 2 Layer for generation"
-msgstr ""
-
-#: sg_proc_arguments.py:237
-msgid "Skip annotator layers"
-msgstr ""
-
-#: sg_proc_arguments.py:238
-msgid "Skip annotator layers (something that I don't know what it does)"
-msgstr ""
-
-#: sg_proc_arguments.py:247 sg_proc_arguments.py:315
-msgid "Resize Mode"
-msgstr ""
-
-#: sg_proc_arguments.py:248
-msgid ""
-"Resize Mode\n"
-"\n"
-"Just resize: Simply resizes the image to target dimensions.The aspect ratio "
-"is not maintained, so the image will stretch or shrink if the aspect ratio "
-"of the destination size is different.\n"
-"\n"
-"Crop and resize: Crops the image to maintain aspect ratio, then resizes. The "
-"aspect ratio is maintained and the overhang is removed.\n"
-"\n"
-"Resize and fill: Resizes and fills empty areas with content. The image is "
-"scaled to fit the specified destination size while maintaining the aspect "
-"ratio. The excess area will be filled with the color of the edge of the "
-"input image.\n"
-"\n"
-"Just resize (latent upscale): Resizes in the latent space. Same as Just "
-"Resize, but uses Latent Upscale for scaling.\n"
-"        "
-msgstr ""
-
-#: sg_proc_arguments.py:267
-msgid "Invert Mask"
-msgstr ""
-
-#: sg_proc_arguments.py:268
-msgid ""
-"Determines whether you want to inpaint the masked object or outside of the "
-"masked object"
-msgstr ""
-
-#: sg_proc_arguments.py:275
-msgid ""
-"Whole picture samples the entire source; Only masked samples the mask area "
-"and composites it into the source"
-msgstr ""
-
-#: sg_proc_arguments.py:282
-msgid "Only masked padding, pixels"
-msgstr ""
-
-#: sg_proc_arguments.py:283
-msgid "Context added around the mask before sampling in Only masked mode"
-msgstr ""
-
-#: sg_proc_arguments.py:291
-msgid "Mask fill mode"
-msgstr ""
-
-#: sg_proc_arguments.py:292
-msgid ""
-"Choose the fill content in mask\n"
-"\n"
-"fill: Fills the input image with the average color within the masked area. "
-"Good for removing objects.\n"
-"original: The input image is used as is.\n"
-"latent noise: Fills the masked area with Seed-based noise. It can be used to "
-"mask an object and rewrite the background. 1 is recommended for CGF.\n"
-"latent nothing: Fills the masked area with the average color of the masked "
-"area. It can be used to mask an object and rewrite the background. 0.8 or "
-"higher is recommended for CGF.\n"
-"        "
-msgstr ""
-
-#: sg_proc_arguments.py:314
-msgid "Module"
-msgstr ""
-
-#: sg_proc_arguments.py:315
-msgid "Control Mode"
-msgstr ""
-
-#: sg_proc_arguments.py:321
-msgid "Weight"
-msgstr ""
-
-#: sg_proc_arguments.py:322
-msgid "Guidance Start (T)"
-msgstr ""
-
-#: sg_proc_arguments.py:323
-msgid "Guidance End (T)"
-msgstr ""
-
-#: sg_proc_arguments.py:324
-msgid "Threshold A"
-msgstr ""
-
-#: sg_proc_arguments.py:325
-msgid "Threshold B"
-msgstr ""
-
-#: sg_proc_arguments.py:331
-msgid "Processor Resolution"
-msgstr ""
-
-#: sg_proc_arguments.py:331
-msgid "ControlNet preprocessing resolution"
 msgstr ""
