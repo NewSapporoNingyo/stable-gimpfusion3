@@ -233,8 +233,7 @@ class GenerationPluginBase(PluginBase):
 class GenerationDialog:
     def __init__(
         self, plugin: GenerationPluginBase, procedure: Gimp.Procedure, config: Gimp.ProcedureConfig,
-        image: Gimp.Image | None, lora_catalog: LoraCatalog, *,
-        refresh_on_focus: bool = True,
+        image: Gimp.Image | None, lora_catalog: LoraCatalog,
     ) -> None:
         self.plugin = plugin
         self.procedure = procedure
@@ -317,7 +316,7 @@ class GenerationDialog:
         add_textarea_to_container(procedure, config, "prompt", body)
         add_textarea_to_container(procedure, config, "negative-prompt", body)
         lora_frame = Gtk.Expander(label="LoRA")
-        self.loras = LoraSelector(plugin.api, config, lora_catalog)
+        self.loras = LoraSelector(config, lora_catalog)
         self.loras.set_border_width(8)
         lora_frame.add(self.loras)
         body.add(lora_frame)
@@ -392,8 +391,6 @@ class GenerationDialog:
         root.show_all()
         self.dialog.resize(860, 760)
         config.connect("notify", self.refresh_mode)
-        if refresh_on_focus:
-            self.dialog.connect("focus-in-event", self.refresh_source)
         for spin in self.dimension_spins:
             spin.connect("changed", self.refresh_mode)
         self.refresh_settings_label()

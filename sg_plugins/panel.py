@@ -186,10 +186,7 @@ class PanelSession:
                 configuration.set_property(name, saved[name])
         if self.requested_mode != "current":
             configuration.set_property("generation_mode", self.requested_mode)
-        self.editor = editor = GenerationDialog(
-            self.plugin, parameters, configuration, self.image, catalog,
-            refresh_on_focus=False,
-        )
+        self.editor = editor = GenerationDialog(self.plugin, parameters, configuration, self.image, catalog)
         editor.file_path = self.state.get("file_path", "")
         editor.refresh_settings_label()
         self.window.get_child().destroy()
@@ -234,7 +231,6 @@ class PanelSession:
         editor.dialog.get_widget_for_response(Gtk.ResponseType.OK).bind_property(
             "sensitive", generate, "sensitive", GObject.BindingFlags.SYNC_CREATE,
         )
-        editor.loras.refresh_button.disconnect(editor.loras.refresh_handler)
         editor.loras.refresh_button.connect("clicked", self.refresh_loras)
         self.window.connect("focus-in-event", self.refresh_targets)
         self.refresh_targets()
@@ -403,7 +399,6 @@ class PanelSession:
             self.status.set_text(str(error))
         finally:
             editor.refresh_source()
-            editor.refresh_mode()
 
     def notified(self, future: Future[Any]) -> None:
         try:

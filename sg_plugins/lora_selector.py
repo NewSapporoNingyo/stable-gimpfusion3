@@ -7,11 +7,9 @@ import json
 from typing import Any
 
 import gi
-import requests
 
 from sg_i18n import _
 from sg_loras import LoraCatalog
-from sg_structures import ApiClient
 
 gi.require_version("Gimp", "3.0")
 gi.require_version("Gtk", "3.0")
@@ -19,15 +17,13 @@ from gi.repository import Gimp, Gtk, Pango
 
 
 class LoraSelector(Gtk.Box):
-    def __init__(self, api: ApiClient, config: Gimp.ProcedureConfig, catalog: LoraCatalog) -> None:
+    def __init__(self, config: Gimp.ProcedureConfig, catalog: LoraCatalog) -> None:
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-        self.api = api
         self.config = config
         self.catalog = catalog
         self.search = Gtk.SearchEntry(placeholder_text=_("Search LoRA name or alias"))
         self.pack_start(self.search, False, False, 0)
         self.refresh_button = Gtk.Button(label=_("Refresh LoRAs"))
-        self.refresh_handler = self.refresh_button.connect("clicked", self.refresh_catalog)
         self.pack_start(self.refresh_button, False, False, 0)
         self.error_label = Gtk.Label(xalign=0, wrap=True)
         self.pack_start(self.error_label, False, False, 0)
@@ -72,19 +68,6 @@ class LoraSelector(Gtk.Box):
         self.details.get_buffer().set_text(
             item["path"] + "\n\n" + json.dumps(item["metadata"], ensure_ascii=False, indent=2),
         )
-
-    def refresh_catalog(self, *_args: Any) -> None:
-        try:
-            self.api.post("/sdapi/v1/refresh-loras")
-            models = self.api.get("/sdapi/v1/loras")
-        except requests.RequestException as error:
-            self.error_label.set_text(str(error))
-            return
-        self.catalog = LoraCatalog(
-            models, self.catalog.preferred_name, self.catalog.default_multiplier, self.catalog.separator,
-        )
-        self.error_label.set_text("")
-        self.filter_catalog()
 
     def toggle_selected(self, _view: Gtk.TreeView, path: Gtk.TreePath, _column: Gtk.TreeViewColumn) -> None:
         prompt = self.config.get_property("prompt")

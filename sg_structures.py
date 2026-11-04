@@ -124,13 +124,17 @@ class ResponseLayers:
 
     def addSelectionAsMask(self, selection: PixelSnapshot | None) -> ResponseLayers:
         if selection is not None:
+            source = Gegl.Buffer.new("Y u8", 0, 0, selection.width, selection.height)
+            source.set(Gegl.Rectangle.new(0, 0, selection.width, selection.height), "Y u8", selection.data[::3])
             for layer in self.layers:
                 _success, x, y = layer.get_offsets()
                 width, height = layer.get_width(), layer.get_height()
-                pixels = selection.crop(x, y, width, height)
                 mask = layer.create_mask(Gimp.AddMaskType.WHITE)
                 buffer = mask.get_buffer()
-                buffer.set(Gegl.Rectangle.new(0, 0, width, height), "Y u8", pixels.data[::3])
+                source.copy(
+                    Gegl.Rectangle.new(x, y, width, height), Gegl.AbyssPolicy.NONE,
+                    buffer, Gegl.Rectangle.new(0, 0, width, height),
+                )
                 buffer.flush()
                 layer.add_mask(mask)
         return self

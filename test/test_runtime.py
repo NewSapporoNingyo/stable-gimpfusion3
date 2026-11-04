@@ -15,11 +15,11 @@ import requests
 from sg_generation import insertion_size
 from sg_plugins.config import ConfigModelPlugin
 from sg_plugins.generation_base import GenerationPluginBase
-from sg_sources import GenerationSource
+from sg_sources import GenerationSource, PixelSnapshot
 from sg_structures import ApiClient, Layer, ResponseLayers
 
 gi.require_version("Gimp", "3.0")
-from gi.repository import Gimp
+from gi.repository import Gegl, Gimp
 
 
 class RuntimeTests(unittest.TestCase):
@@ -66,6 +66,38 @@ class RuntimeTests(unittest.TestCase):
                 drawable.scale.assert_not_called()
             else:
                 drawable.scale.assert_called_once_with(*insertion_size(values, (383, 259), (512, 384)), False)
+
+    def test_selection_masks_preserve_coverage_across_layer_bounds(self) -> None:
+        Gegl.init(None)
+        coverage = bytes([0, 32, 64, 128, 255, 255, 96, 0, 192, 224,
+                          0, 128, 255, 16, 0, 64, 128, 192, 224, 255])
+        selection = PixelSnapshot(5, 4, 3, bytes(value for value in coverage for _channel in range(3)))
+        bounds = ((0, 0, 5, 4), (1, 1, 3, 2), (-2, -1, 6, 5), (4, 3, 4, 3), (8, 9, 2, 2))
+        for format_name in ("Y u8", "Y float"):
+            layers = ResponseLayers.__new__(ResponseLayers)
+            layers.layers = []
+            for x, y, width, height in bounds:
+                layer = MagicMock()
+                layer.get_offsets.return_value = True, x, y
+                layer.get_width.return_value = width
+                layer.get_height.return_value = height
+                layer.create_mask.return_value.get_buffer.return_value = Gegl.Buffer.new(
+                    format_name, 0, 0, width, height,
+                )
+                layers.layers.append(layer)
+            layers.addSelectionAsMask(selection)
+            for layer, (x, y, width, height) in zip(layers.layers, bounds, strict=True):
+                with self.subTest(format=format_name, bounds=(x, y, width, height)):
+                    mask = layer.create_mask.return_value
+                    actual = mask.get_buffer().get(
+                        Gegl.Rectangle.new(0, 0, width, height), 1.0, "Y u8", Gegl.AbyssPolicy.NONE,
+                    )
+                    expected = bytes(
+                        coverage[row * 5 + column] if 0 <= column < 5 and 0 <= row < 4 else 0
+                        for row in range(y, y + height) for column in range(x, x + width)
+                    )
+                    assert actual == expected
+                    layer.add_mask.assert_called_once_with(mask)
 
     def test_api_timeout_override_and_http_errors(self) -> None:
         client = ApiClient("http://example.test", timeout=300)

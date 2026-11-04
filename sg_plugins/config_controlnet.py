@@ -5,6 +5,7 @@ from typing import Any
 import gi
 
 from sg_constants import CONTROL_MODES, CONTROLNET_RESIZE_MODES
+from sg_generation import CONTROLNET_PARAMETERS
 from sg_i18n import _
 from sg_plugins import PluginBase
 from sg_proc_arguments import PLUGIN_FIELDS_CONTROLNET
@@ -49,47 +50,12 @@ class ConfigControlnetLayerPlugin(PluginBase):
             dialog.get_scale_entry("processor_res", 1).set_increments(8, 64)
             dialog.get_scale_entry("threshold_a", 1).set_increments(8, 64)
             dialog.get_scale_entry("threshold_b", 1).set_increments(8, 64)
-            dialog.fill(
-                [
-                    "module",
-                    "model",
-                    "weight",
-                    "resize_mode",
-                    "control_mode",
-                    "guidance_start",
-                    "guidance_end",
-                    "processor_res",
-                    "threshold_a",
-                    "threshold_b",
-                ],
-            )
+            dialog.fill(list(CONTROLNET_PARAMETERS))
 
             if not dialog.run():
                 return procedure.new_return_values(Gimp.PDBStatusType.CANCEL, GLib.Error())
 
-        module = config.get_property("module")
-        model = config.get_property("model")
-        weight = config.get_property("weight")
-        resize_mode = config.get_property("resize_mode")
-        control_mode = config.get_property("control_mode")
-        guidance_start = config.get_property("guidance_start")
-        guidance_end = config.get_property("guidance_end")
-        processor_res = config.get_property("processor_res")
-        threshold_a = config.get_property("threshold_a")
-        threshold_b = config.get_property("threshold_b")
-
-        cn_settings = {
-            "module": module,
-            "model": model,
-            "weight": weight,
-            "resize_mode": resize_mode,
-            "control_mode": control_mode,
-            "guidance_start": guidance_start,
-            "guidance_end": guidance_end,
-            "processor_res": processor_res,
-            "threshold_a": threshold_a,
-            "threshold_b": threshold_b,
-        }
+        cn_settings = {name: config.get_property(name) for name in CONTROLNET_PARAMETERS}
         for active_layer in drawables:
             cnlayer = Layer(active_layer)
             cnlayer.saveData(cn_settings)
